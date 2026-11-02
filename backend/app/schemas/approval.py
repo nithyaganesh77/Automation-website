@@ -37,3 +37,4 @@ class ApprovalActionRequest(BaseModel):
     action: str  # APPROVE, REJECT, REPROCESS
     comments: Optional[str] = None
     field_changes: Optional[Dict[str, Any]] = None
+

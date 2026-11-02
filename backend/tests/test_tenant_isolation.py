@@ -47,3 +47,4 @@ def test_tenant_isolation(client, db_session, test_org_and_admin):
     assert list_response.status_code == 200
     doc_ids = [d["id"] for d in list_response.json()["items"]]
     assert doc_b.id not in doc_ids
+

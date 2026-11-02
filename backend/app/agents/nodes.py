@@ -530,3 +530,4 @@ def finalization_agent_node(state: DocuMindState) -> Dict[str, Any]:
         return {"error": f"Finalization error: {str(e)}", "current_step": "finalization_failed"}
     finally:
         db.close()
+

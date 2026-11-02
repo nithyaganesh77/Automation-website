@@ -88,3 +88,4 @@ class InvoiceOut(InvoiceBase):
 
     class Config:
         from_attributes = True
+

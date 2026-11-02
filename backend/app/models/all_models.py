@@ -426,3 +426,4 @@ class OrganizationSetting(Base):
     updated_at = Column(DateTime(timezone=True), default=utc_now, onupdate=utc_now, nullable=False)
 
     organization = relationship("Organization", back_populates="settings")
+

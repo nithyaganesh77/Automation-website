@@ -109,3 +109,4 @@ def get_agent_execution_detail(
         raise HTTPException(status_code=404, detail="Execution trace not found")
 
     return record
+

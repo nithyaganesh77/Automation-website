@@ -33,3 +33,4 @@ def test_invalid_login(client):
     }
     response = client.post("/api/v1/auth/login", json=login_payload)
     assert response.status_code == 401
+

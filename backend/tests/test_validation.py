@@ -67,3 +67,4 @@ def test_validation_engine_gstin_warning():
     }
     status, is_valid, errors, warnings, explanations = ValidationEngine.validate_invoice(invoice_data)
     assert any(w["code"] == "INVALID_GSTIN_FORMAT" for w in warnings)
+

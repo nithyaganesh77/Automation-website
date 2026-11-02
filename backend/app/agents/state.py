@@ -53,3 +53,4 @@ class DocuMindState(TypedDict, total=False):
     agent_executions: List[Dict[str, Any]]
     current_step: str
     error: Optional[str]
+

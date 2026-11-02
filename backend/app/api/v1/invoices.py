@@ -163,3 +163,4 @@ def get_invoice_validation(
     if not val:
         raise HTTPException(status_code=404, detail="Validation result not found")
     return val
+

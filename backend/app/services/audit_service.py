@@ -52,3 +52,4 @@ class AuditService:
         db.commit()
         db.refresh(notif)
         return notif
+

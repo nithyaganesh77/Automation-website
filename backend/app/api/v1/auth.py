@@ -220,3 +220,4 @@ def get_current_user(auth_ctx: AuthenticatedContext = Depends(get_current_user_c
         organization={"id": org.id, "name": org.name, "slug": org.slug} if org else None,
         role=auth_ctx.role
     )
+

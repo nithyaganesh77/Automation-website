@@ -70,3 +70,4 @@ Interactive Swagger documentation is available at `/docs` when running the backe
 - `PATCH /api/v1/settings`: Update Gemini/OpenAI API keys, rounding tolerances, confidence thresholds.
 - `GET /api/v1/settings/audit-logs`: Immutable log of all system and user operations.
 - `GET /api/v1/notifications`: In-app reviewer alerts and task notifications.
+

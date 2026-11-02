@@ -93,3 +93,4 @@ python scripts/seed_db.py
 # Check service health
 curl -f https://api.documind.yourcompany.com/health
 ```
+

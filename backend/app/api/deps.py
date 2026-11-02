@@ -66,3 +66,4 @@ def require_roles(allowed_roles: List[str]):
             )
         return auth_ctx
     return role_checker
+

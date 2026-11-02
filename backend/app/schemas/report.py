@@ -53,19 +53,66 @@ class ExportRecordOut(BaseModel):
 
 
 class SettingsOut(BaseModel):
-    ai_provider: str
-    api_key_configured: bool
+    primary_provider: str
+    fallback_provider: str
+    gemini_model: str
+    groq_model: str
+    gemini_configured: bool
+    groq_configured: bool
+    gemini_status: str
+    groq_status: str
+    disable_external_ai: bool
+    daily_request_limit: int
+    monthly_token_budget: int
+    safe_quota_mode: bool
     confidence_threshold: float
     tax_tolerance: float
-    auto_approve_threshold: float
     currency: str
 
 
 class SettingsUpdateRequest(BaseModel):
-    ai_provider: Optional[str] = None
+    primary_provider: Optional[str] = None
+    fallback_provider: Optional[str] = None
     gemini_api_key: Optional[str] = None
-    openai_api_key: Optional[str] = None
+    groq_api_key: Optional[str] = None
+    gemini_model: Optional[str] = None
+    groq_model: Optional[str] = None
+    disable_external_ai: Optional[bool] = None
+    daily_request_limit: Optional[int] = None
+    monthly_token_budget: Optional[int] = None
+    safe_quota_mode: Optional[bool] = None
     confidence_threshold: Optional[float] = None
     tax_tolerance: Optional[float] = None
-    auto_approve_threshold: Optional[float] = None
     currency: Optional[str] = None
+
+
+class TestConnectionRequest(BaseModel):
+    provider: str  # "gemini" or "groq"
+    api_key: Optional[str] = None
+
+
+class TestConnectionResponse(BaseModel):
+    success: bool
+    message: str
+
+
+class AIUsageTelemetryOut(BaseModel):
+    gemini_requests: int
+    gemini_tokens: int
+    gemini_failures: int
+    groq_requests: int
+    groq_tokens: int
+    groq_failures: int
+    fallback_events: int
+    estimated_cost_usd: float
+    last_active_provider: str
+    gemini_status: str
+    groq_status: str
+    primary_provider: str
+    fallback_provider: str
+    gemini_model: str
+    groq_model: str
+    privacy_mode: bool
+    daily_request_limit: int
+    monthly_token_budget: int
+    safe_quota_mode: bool

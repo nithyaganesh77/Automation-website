@@ -262,3 +262,4 @@ def download_export_file(
     filename = os.path.basename(rec.file_path)
     media_type = "text/csv" if rec.format == "CSV" else "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     return FileResponse(path=rec.file_path, filename=filename, media_type=media_type)
+

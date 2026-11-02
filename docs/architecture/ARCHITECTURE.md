@@ -96,3 +96,4 @@ DocuMind AI utilizes 24 normalized tables with UUID primary keys and organizatio
 - **Password Hashing**: Bcrypt with auto-salted rounds.
 - **RBAC**: Multi-tenant roles (`Admin`, `Reviewer`, `Operator`, `Viewer`).
 - **Prompt Injection Defense**: Document text is isolated and treated as untrusted data inputs.
+

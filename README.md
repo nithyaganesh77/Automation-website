@@ -14,7 +14,7 @@ DocuMind AI is a production-grade enterprise SaaS platform for autonomous docume
 
 - **9 Specialized LangGraph AI Agents**:
   1. **Document Intake Agent**: File type validation, SHA-256 cryptographic digest computation, exact duplicate detection.
-  2. **OCR Agent**: Multi-page text extraction with native PDF fallback (PyMuPDF) and scanned layout parsing.
+  2. **OCR Agent**: Multi-page text extraction with native PDF fallback (PyMuPDF), Word (`python-docx`), Excel (`openpyxl`), and image OCR parsing.
   3. **Classification Agent**: Categorization into Tax Invoices, Purchase Orders, Receipts, Delivery Challans, and Contracts.
   4. **Extraction Agent**: Strict Pydantic JSON schema extraction with field-level evidence and confidence tracking.
   5. **Validation Agent**: Deterministic Python mathematical engine validating line items, tax breakdowns, and Indian GST rules.
@@ -22,78 +22,82 @@ DocuMind AI is a production-grade enterprise SaaS platform for autonomous docume
   7. **Anomaly Detection Agent**: Statistical vendor spend deviation and tax slab anomaly detection.
   8. **Decision & Approval Agent**: Evaluates pipeline results and orchestrates human-in-the-loop review.
   9. **Reporting and Finalization Agent**: Persists approved records, updates vendor ledgers, and generates Excel/CSV exports.
-- **Zero Silent Approvals**: Unverified financial records are never silently approved or exported without validation and review.
-- **Exact Decimal Arithmetic**: Uses `decimal.Decimal` for all currency calculations to prevent floating-point rounding errors.
-- **Multi-Tenant Isolation**: Complete database-level isolation by organization ID.
+- **Free-First Zero-Budget AI Architecture**:
+  - **Primary**: Google Gemini API (`gemini-2.0-flash`) via the official `google-genai` SDK.
+  - **Fallback**: Groq API (`llama-3.3-70b-versatile` / `llama-3.1-8b-instant`) via the `groq` SDK.
+  - **Failover Protection**: Automatic failover upon rate limits (HTTP 429) or transient provider outages with bounded exponential backoff.
+  - **Local Fallback**: Zero-API deterministic regex/layout parsing fallback for offline or zero-quota environments.
+- **100% Free & Open-Source Local Infrastructure**:
+  - **MinIO**: High-performance local S3-compatible object storage with signed URLs.
+  - **Qdrant**: Local vector database for semantic chunk retrieval and embedding indexing.
+  - **PostgreSQL & Redis**: Production-grade relational persistence and asynchronous Celery task queue.
+  - **Prometheus & Grafana**: Local metric scraping and real-time observability dashboards.
+- **Zero Silent Approvals**: Unverified financial records or documents with mathematical discrepancies are never silently approved.
+- **Exact Decimal Arithmetic**: Uses Python `decimal.Decimal` with ₹2.00 rounding tolerance to eliminate floating-point calculation errors.
+- **Cost & Privacy Controls**: Admin-controlled daily request limits, monthly token budgets, and an instant toggle for 100% local processing mode (disabling all third-party AI egress).
 
 ---
 
 ## 2. Technology Stack
 
-- **Frontend**: Next.js 14, TypeScript, Tailwind CSS, Lucide Icons, Recharts.
+- **Frontend**: Next.js 14 (App Router), TypeScript, Tailwind CSS, Lucide Icons, Recharts.
 - **Backend**: FastAPI, Python 3.11, Pydantic v2, SQLAlchemy 2.0, Alembic.
-- **AI & Agent Orchestration**: LangGraph, Google Gemini 2.0 API, OpenAI API (with deterministic offline fallback engine).
-- **Document Processing**: PyMuPDF (`pymupdf`), `python-docx`, `openpyxl`, `Pillow`.
-- **Database & Storage**: PostgreSQL, SQLite (local development), Redis, Celery.
-- **DevOps & Monitoring**: Docker, Docker Compose, Prometheus metrics instrumentation, GitHub Actions CI.
+- **AI & Agent Orchestration**: LangGraph, Google Gemini API, Groq API, Sentence Transformers.
+- **Document Processing**: PyMuPDF (`fitz`), `python-docx`, `openpyxl`, `Pillow`.
+- **Database & Storage**: PostgreSQL (Docker), SQLite (local dev), Redis, MinIO S3, Qdrant.
+- **DevOps & Monitoring**: Docker Compose (9 services with health checks), Prometheus, Grafana.
 
 ---
 
-## 3. Quickstart Guide
+## 3. Windows PowerShell Quickstart
 
-### Option A: Running with Docker Compose (Recommended)
+For local Windows 10/11 development, use the dedicated automation scripts:
 
-1. Clone repository and start the complete local container stack:
-```bash
-docker compose up --build
+| Script | Purpose |
+|---|---|
+| `.\setup.ps1` | Verifies Python, Node.js, npm, Docker; provisions virtual environment; installs dependencies; seeds initial database. |
+| `.\start.ps1` | Launches local FastAPI and Next.js development servers (or `-Docker` for complete container stack). |
+| `.\stop.ps1` | Gracefully terminates Docker containers and background development processes. |
+| `.\test.ps1` | Runs the full Pytest automated test suite with verbose reporting. |
+| `.\reset-dev.ps1` | Resets development database, regenerates synthetic invoices, and reseeds initial demo state. |
+
+### Running the Test Suite
+```powershell
+powershell -ExecutionPolicy Bypass -File .\test.ps1
 ```
 
-2. Open the applications:
-- **Frontend Dashboard**: [http://localhost:3000](http://localhost:3000)
-- **FastAPI Documentation**: [http://localhost:8000/docs](http://localhost:8000/docs)
-- **Prometheus Metrics**: [http://localhost:9090](http://localhost:9090)
+### Starting the Application
+```powershell
+powershell -ExecutionPolicy Bypass -File .\start.ps1
+```
 
 ---
 
-### Option B: Running Locally
+## 4. Docker Compose Deployment (9 Services)
 
-#### 1. Backend Setup (Python 3.11)
+To launch the complete enterprise containerized stack:
+
 ```bash
-# From workspace root
-uv venv --python 3.11 backend/.venv
-# Or: python -m venv backend/.venv
-
-# Activate virtual environment
-# Windows:
-backend\.venv\Scripts\activate
-# Linux/Mac:
-source backend/.venv/bin/activate
-
-# Install dependencies
-pip install -r backend/requirements.txt
-
-# Generate synthetic test documents
-python scripts/generate_synthetic_invoices.py
-
-# Seed database with sample organization and test documents
-python scripts/seed_db.py
-
-# Start FastAPI development server
-uvicorn app.main:app --reload --port 8000
+docker compose up --build -d
 ```
 
-#### 2. Frontend Setup (Node.js 20+)
-```bash
-cd frontend
-npm install
-npm run dev
-```
+### Exposed Endpoints & Ports
 
-Navigate to [http://localhost:3000](http://localhost:3000) to access the platform.
+| Service | Port | Description |
+|---|---|---|
+| **Next.js Web UI** | `http://localhost:3000` | Enterprise 10-page SaaS dashboard |
+| **Grafana Dashboards** | `http://localhost:3001` | Live metrics & agent telemetry (`admin`/`admin`) |
+| **FastAPI Backend** | `http://localhost:8000` | REST API & Swagger UI (`/docs`) |
+| **Prometheus Server** | `http://localhost:9090` | System metrics & scrape targets |
+| **MinIO Console** | `http://localhost:9001` | S3 Object storage browser (`minioadmin`/`minioadmin`) |
+| **MinIO S3 API** | `http://localhost:9000` | S3-compatible document storage endpoint |
+| **Qdrant Vector DB** | `http://localhost:6333` | Vector search REST API |
+| **PostgreSQL** | `localhost:5432` | Relational database (`documind`/`documind_secure_password`) |
+| **Redis** | `localhost:6379` | Celery message broker & cache |
 
 ---
 
-## 4. Default Test Credentials
+## 5. Default Test Credentials
 
 The database comes pre-seeded with synthetic enterprise records:
 
@@ -103,21 +107,6 @@ The database comes pre-seeded with synthetic enterprise records:
 | **Financial Reviewer** | `reviewer@documind.ai` | `Password123!` |
 
 *(One-click demo buttons are available on the login page for instant authentication).*
-
----
-
-## 5. Automated Test Suite
-
-Run the complete backend test suite:
-```bash
-pytest backend/tests -v
-```
-
-Tests cover:
-- User registration, authentication, JWT tokens, and RBAC permissions.
-- Mathematical consistency, tax tolerance, and GSTIN checksum validation.
-- Multi-tenant data isolation across organizations.
-- LangGraph agent execution and dashboard metric generation.
 
 ---
 
@@ -133,7 +122,7 @@ documind-ai/
 │   │   ├── database/       # SQLAlchemy engine & session management
 │   │   ├── models/         # 24 normalized SQLAlchemy database models
 │   │   ├── schemas/        # Strict Pydantic request/response schemas
-│   │   ├── services/       # OCR, LLM abstraction, validation, duplicate & anomaly engines
+│   │   ├── services/       # OCR, LLM failover, validation, duplicate & anomaly engines
 │   │   └── main.py         # FastAPI application entrypoint
 │   ├── tests/              # Pytest automated test suite
 │   └── requirements.txt    # Backend Python dependencies
@@ -147,16 +136,28 @@ documind-ai/
 │   └── tailwind.config.ts  # Dark navy & white design system configuration
 ├── infrastructure/
 │   ├── docker/             # Dockerfile.backend & Dockerfile.frontend
-│   └── monitoring/         # Prometheus scrape configuration
+│   └── monitoring/         # Prometheus scrape configuration & Grafana provisioning
 ├── evaluation/
-│   └── datasets/           # Synthetic test invoices (PDFs)
+│   ├── datasets/           # 6 Synthetic test invoices (PDFs)
+│   ├── prompts/            # Promptfoo LLM prompt evaluation suite
+│   └── AI_EVALUATION.md    # AI accuracy & retrieval benchmarks documentation
 ├── docs/                   # Architecture, API, Security, and AWS Deployment guides
 ├── scripts/                # Synthetic PDF generator & database seed scripts
-├── docker-compose.yml      # Multi-container orchestration
+├── docker-compose.yml      # Multi-container orchestration (9 services)
+├── setup.ps1               # Automated Windows environment setup
+├── start.ps1               # Development start script
+├── stop.ps1                # Development stop script
+├── test.ps1                # Automated test execution script
+├── reset-dev.ps1           # Environment reset and reseeding script
 └── README.md               # Master project documentation
 ```
 
 ---
 
-## 7. License & Compliance
-This software is built for enterprise commercial deployment with strict financial governance and data isolation.
+## 7. Comprehensive Documentation
+
+- [System Architecture](file:///docs/architecture/ARCHITECTURE.md)
+- [REST API Reference](file:///docs/api/API.md)
+- [Enterprise Security & Privacy](file:///docs/security/SECURITY.md)
+- [AWS Cloud Deployment Guide](file:///docs/deployment/AWS_DEPLOYMENT.md)
+- [AI Benchmark & Evaluation Guide](file:///evaluation/AI_EVALUATION.md)

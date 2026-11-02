@@ -59,3 +59,4 @@ def execute_document_workflow(initial_state: DocuMindState) -> DocuMindState:
     final_state = documind_app.invoke(initial_state)
     logger.info(f"Completed DocuMind workflow for document {initial_state.get('document_id')} with status: {final_state.get('current_step')}")
     return final_state
+

@@ -31,3 +31,4 @@ class AgentTraceOut(BaseModel):
 
     class Config:
         from_attributes = True
+

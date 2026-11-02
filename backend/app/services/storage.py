@@ -1,13 +1,41 @@
 import os
 import hashlib
 import uuid
-import shutil
+import io
 from typing import Tuple
 from fastapi import UploadFile, HTTPException
 from app.core.config import settings
+from app.core.logging import logger
+
+try:
+    from minio import Minio
+    from minio.error import S3Error
+except ImportError:
+    Minio = None
+    S3Error = None
 
 
 class StorageService:
+    _minio_client = None
+
+    @classmethod
+    def get_minio_client(cls):
+        if cls._minio_client is None and Minio:
+            try:
+                cls._minio_client = Minio(
+                    settings.MINIO_ENDPOINT,
+                    access_key=settings.MINIO_ACCESS_KEY,
+                    secret_key=settings.MINIO_SECRET_KEY,
+                    secure=settings.MINIO_SECURE
+                )
+                # Check/Create bucket
+                if not cls._minio_client.bucket_exists(settings.MINIO_BUCKET):
+                    cls._minio_client.make_bucket(settings.MINIO_BUCKET)
+            except Exception as e:
+                logger.warning(f"MinIO storage unavailable: {e}. Falling back to local storage.")
+                cls._minio_client = None
+        return cls._minio_client
+
     @staticmethod
     def compute_sha256(file_path: str) -> str:
         sha256_hash = hashlib.sha256()
@@ -18,7 +46,6 @@ class StorageService:
 
     @staticmethod
     def validate_file(file: UploadFile) -> Tuple[str, str]:
-        """Validate filename extension and MIME type against allowed list."""
         if not file.filename:
             raise HTTPException(status_code=400, detail="Filename cannot be empty")
         
@@ -32,13 +59,13 @@ class StorageService:
         mime = file.content_type or "application/octet-stream"
         return ext, mime
 
-    @staticmethod
-    async def save_upload_file(file: UploadFile, organization_id: str) -> Tuple[str, str, int, str]:
+    @classmethod
+    async def save_upload_file(cls, file: UploadFile, organization_id: str) -> Tuple[str, str, int, str]:
         """
-        Saves uploaded file to the organization's partitioned storage directory.
-        Returns (saved_file_path, file_hash, file_size_bytes, safe_filename).
+        Saves uploaded file to local partition and mirrors to MinIO if enabled.
+        Returns: (file_path, file_hash, file_size, safe_filename)
         """
-        ext, mime = StorageService.validate_file(file)
+        ext, mime = cls.validate_file(file)
         
         org_dir = os.path.join(settings.UPLOAD_DIR, organization_id)
         os.makedirs(org_dir, exist_ok=True)
@@ -65,4 +92,21 @@ class StorageService:
                 buffer.write(chunk)
 
         file_hash = sha256_hash.hexdigest()
+
+        # If MinIO is enabled, sync to local MinIO object store
+        minio_cli = cls.get_minio_client()
+        if minio_cli:
+            try:
+                object_name = f"{organization_id}/{safe_filename}"
+                with open(destination_path, "rb") as f_data:
+                    minio_cli.put_object(
+                        settings.MINIO_BUCKET,
+                        object_name,
+                        f_data,
+                        length=total_size,
+                        content_type=mime
+                    )
+            except Exception as e:
+                logger.warning(f"Failed to sync to MinIO: {e}")
+
         return destination_path, file_hash, total_size, file.filename

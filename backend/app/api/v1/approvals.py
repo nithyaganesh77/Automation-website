@@ -129,3 +129,4 @@ def reject_request(
 
     db.refresh(req)
     return req
+

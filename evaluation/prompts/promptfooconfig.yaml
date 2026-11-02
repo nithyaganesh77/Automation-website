@@ -1,0 +1,45 @@
+# Promptfoo LLM Prompt Evaluation Configuration for DocuMind AI
+# Tests classification and structured extraction prompts against synthetic ground truth
+
+description: "DocuMind AI Prompt Evaluation Suite"
+
+prompts:
+  - "file://classification_prompt.txt"
+  - "file://extraction_prompt.txt"
+
+providers:
+  - id: "google:gemini-2.0-flash"
+    config:
+      apiKeyEnvar: "GEMINI_API_KEY"
+      temperature: 0.0
+  - id: "groq:llama-3.3-70b-versatile"
+    config:
+      apiKeyEnvar: "GROQ_API_KEY"
+      temperature: 0.0
+
+tests:
+  - description: "Classify standard B2B tax invoice"
+    vars:
+      document_text: "TAX INVOICE\nInvoice No: INV-2026-001\nSupplier: ACME Cloud Services Pvt Ltd\nGSTIN: 27AABCU9603R1ZN\nSubtotal: INR 10,000\nCGST (9%): 900\nSGST (9%): 900\nGrand Total: INR 11,800"
+    assert:
+      - type: icontains
+        value: "tax_invoice"
+      - type: javascript
+        value: "output.confidence >= 0.9"
+
+  - description: "Classify standard purchase order"
+    vars:
+      document_text: "PURCHASE ORDER\nPO Number: PO-88901\nVendor: Vertex Logistics\nDelivery Date: 2026-12-01\nTotal Amount: INR 45,000"
+    assert:
+      - type: icontains
+        value: "purchase_order"
+
+  - description: "Extract structured fields from tax invoice"
+    vars:
+      document_text: "TAX INVOICE\nInvoice #: INV-2026-0042\nDate: 2026-11-01\nVendor: Global Tech Hardware\nGSTIN: 29ABCDE1234F1Z5\nTotal: 15750.00"
+    assert:
+      - type: contains-json
+        value:
+          invoice_number: "INV-2026-0042"
+          supplier_gstin: "29ABCDE1234F1Z5"
+          grand_total: 15750.00

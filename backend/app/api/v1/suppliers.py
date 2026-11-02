@@ -87,3 +87,4 @@ def update_supplier(
     db.commit()
     db.refresh(supplier)
     return supplier
+

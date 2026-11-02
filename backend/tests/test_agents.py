@@ -24,3 +24,4 @@ def test_dashboard_metrics_endpoint(client, test_org_and_admin):
     assert "total_documents" in data
     assert "total_invoice_value" in data
     assert "monthly_expense_trend" in data
+
