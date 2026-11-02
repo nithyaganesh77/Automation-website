@@ -33,3 +33,4 @@ Write-Host "Re-seeding database with demonstration entities..." -ForegroundColor
 
 Write-Host ""
 Write-Host "Development environment reset cleanly!" -ForegroundColor Green
+

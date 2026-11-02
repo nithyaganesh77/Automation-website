@@ -85,3 +85,4 @@ npx promptfoo@latest eval -c evaluation/prompts/promptfooconfig.yaml
 ```bash
 python scripts/generate_synthetic_invoices.py
 ```
+

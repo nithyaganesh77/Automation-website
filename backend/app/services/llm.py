@@ -198,24 +198,27 @@ class LLMService:
     @classmethod
     def _classify_with_groq(cls, text: str) -> Tuple[str, float, Dict[str, Any]]:
         from groq import Groq
-        client = Groq(api_key=settings.GROQ_API_KEY)
+        client = Groq(api_key=settings.GROQ_API_KEY, timeout=15.0)
         prompt = (
             "You are an expert document classification engine. Classify the following business text into exactly one of: "
             "['Purchase Invoice', 'Sales Invoice', 'Purchase Order', 'Receipt', 'Expense Bill', 'Bank Statement', 'GST Document', 'Delivery Challan', 'Contract', 'Other'].\n"
-            "Return strict JSON matching this structure: {\"document_type\": \"...\", \"confidence\": 0.95, \"reason\": \"...\"}"
+            "Return valid JSON only matching this structure: {\"document_type\": \"...\", \"confidence\": 0.95, \"reason\": \"...\"}"
         )
         res = client.chat.completions.create(
             model=settings.GROQ_MODEL,
-            response_format={"type": "json_object"},
             messages=[
                 {"role": "system", "content": prompt},
                 {"role": "user", "content": f"Document Text:\n{text[:4000]}"}
             ],
-            temperature=0.1
+            temperature=0.1,
+            max_tokens=300
         )
         content = res.choices[0].message.content or "{}"
-        parsed = json.loads(content)
-        return parsed.get("document_type", "Other"), float(parsed.get("confidence", 0.95)), parsed
+        match = re.search(r"\{.*\}", content, re.DOTALL)
+        if match:
+            parsed = json.loads(match.group(0))
+            return parsed.get("document_type", "Other"), float(parsed.get("confidence", 0.95)), parsed
+        return "Other", 0.70, {}
 
     @classmethod
     def _extract_with_gemini(cls, text: str) -> Tuple[Dict[str, Any], int, Decimal]:
@@ -268,27 +271,53 @@ class LLMService:
     @classmethod
     def _extract_with_groq(cls, text: str) -> Tuple[Dict[str, Any], int, Decimal]:
         from groq import Groq
-        client = Groq(api_key=settings.GROQ_API_KEY)
+        client = Groq(api_key=settings.GROQ_API_KEY, timeout=25.0)
         prompt = (
             "Extract structured invoice fields into JSON. Do not fabricate missing values. "
-            "Never invent GSTINs or dates. Include: invoice_number, invoice_date, due_date, "
-            "supplier_name, supplier_gstin, supplier_address, customer_name, customer_gstin, "
-            "currency, subtotal, taxable_amount, cgst, sgst, igst, total_tax, discount, other_charges, "
-            "grand_total, payment_terms, purchase_order_number, line_items, confidence_scores."
+            "Return valid JSON only matching this format:\n"
+            "{\n"
+            "  \"invoice_number\": \"...\",\n"
+            "  \"invoice_date\": \"YYYY-MM-DD\",\n"
+            "  \"due_date\": null,\n"
+            "  \"supplier_name\": \"...\",\n"
+            "  \"supplier_gstin\": \"...\",\n"
+            "  \"supplier_address\": null,\n"
+            "  \"customer_name\": \"...\",\n"
+            "  \"customer_gstin\": null,\n"
+            "  \"customer_address\": null,\n"
+            "  \"currency\": \"INR\",\n"
+            "  \"subtotal\": 0.0,\n"
+            "  \"taxable_amount\": 0.0,\n"
+            "  \"cgst\": 0.0,\n"
+            "  \"sgst\": 0.0,\n"
+            "  \"igst\": 0.0,\n"
+            "  \"total_tax\": 0.0,\n"
+            "  \"discount\": 0.0,\n"
+            "  \"other_charges\": 0.0,\n"
+            "  \"grand_total\": 0.0,\n"
+            "  \"payment_terms\": null,\n"
+            "  \"purchase_order_number\": null,\n"
+            "  \"line_items\": [],\n"
+            "  \"confidence_scores\": {}\n"
+            "}"
         )
         res = client.chat.completions.create(
             model=settings.GROQ_MODEL,
-            response_format={"type": "json_object"},
             messages=[
                 {"role": "system", "content": prompt},
                 {"role": "user", "content": f"Document Text:\n{text[:8000]}"}
             ],
-            temperature=0.1
+            temperature=0.1,
+            max_tokens=2048
         )
         content = res.choices[0].message.content or "{}"
-        parsed = json.loads(content)
-        tokens = res.usage.total_tokens if res.usage else 800
-        return parsed, tokens, Decimal("0.000000")  # Free Tier: $0.00
+        match = re.search(r"\{.*\}", content, re.DOTALL)
+        if match:
+            parsed = json.loads(match.group(0))
+            tokens = res.usage.total_tokens if res.usage else 800
+            return parsed, tokens, Decimal("0.000000")  # Free Tier: $0.00
+        tokens = res.usage.total_tokens if res.usage else 0
+        return {}, tokens, Decimal("0.000000")
 
     @classmethod
     def _classify_deterministic(cls, text: str) -> Tuple[str, float, Dict[str, Any]]:

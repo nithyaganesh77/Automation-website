@@ -57,8 +57,8 @@ class Settings(BaseSettings):
     AI_FALLBACK_PROVIDER: str = Field(default="groq", validation_alias="AI_FALLBACK_PROVIDER")
     GEMINI_API_KEY: Optional[str] = Field(default=None, validation_alias="GEMINI_API_KEY")
     GROQ_API_KEY: Optional[str] = Field(default=None, validation_alias="GROQ_API_KEY")
-    GEMINI_MODEL: str = Field(default="gemini-2.0-flash", validation_alias="GEMINI_MODEL")
-    GROQ_MODEL: str = Field(default="llama-3.3-70b-versatile", validation_alias="GROQ_MODEL")
+    GEMINI_MODEL: str = Field(default="gemini-3.8-flash", validation_alias="GEMINI_MODEL")
+    GROQ_MODEL: str = Field(default="qwen/qwen3.8-27b", validation_alias="GROQ_MODEL")
 
     # Document Privacy & Cost Protection
     DISABLE_EXTERNAL_AI: bool = Field(default=False, validation_alias="DISABLE_EXTERNAL_AI")

@@ -43,3 +43,4 @@ tests:
           invoice_number: "INV-2026-0042"
           supplier_gstin: "29ABCDE1234F1Z5"
           grand_total: 15750.00
+

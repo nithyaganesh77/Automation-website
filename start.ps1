@@ -52,3 +52,4 @@ Write-Host "   - Backend API Docs: http://localhost:8000/docs         " -Foregro
 Write-Host "   - Demo User: admin@documind.ai / Password123!          " -ForegroundColor Yellow
 Write-Host "   To stop services gracefully: .\stop.ps1                " -ForegroundColor Cyan
 Write-Host "==========================================================" -ForegroundColor Green
+

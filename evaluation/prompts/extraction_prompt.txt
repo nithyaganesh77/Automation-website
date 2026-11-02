@@ -24,3 +24,4 @@ Extract structured fields from the document text into valid JSON matching this s
 
 Document:
 {{document_text}}
+

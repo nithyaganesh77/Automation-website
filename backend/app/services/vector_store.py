@@ -62,3 +62,4 @@ class VectorStoreService:
         except Exception as e:
             logger.warning(f"Failed to index point in Qdrant: {e}")
             return False
+

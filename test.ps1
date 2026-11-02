@@ -26,3 +26,4 @@ if ($LASTEXITCODE -eq 0) {
     Write-Host "Test failures detected. Please inspect log above." -ForegroundColor Red
     exit 1
 }
+

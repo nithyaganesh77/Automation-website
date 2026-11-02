@@ -27,3 +27,4 @@ if (Test-Path ".documind_pids.json") {
 Get-Process | Where-Object { $_.ProcessName -match "uvicorn|node" } | Stop-Process -Force -ErrorAction SilentlyContinue
 
 Write-Host "All DocuMind AI services stopped successfully." -ForegroundColor Green
+
