@@ -1,6 +1,6 @@
 import os
 from typing import Optional, List
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Query, status
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Query, status
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, desc
@@ -20,6 +20,7 @@ router = APIRouter(prefix="/documents", tags=["Documents"])
 @router.post("/upload", response_model=DocumentDetailOut)
 async def upload_document(
     file: UploadFile = File(...),
+    customer_consent: bool = Form(default=True),
     auth_ctx: AuthenticatedContext = Depends(get_current_user_context),
     db: Session = Depends(get_db)
 ):
@@ -58,7 +59,12 @@ async def upload_document(
         action="DOCUMENT_UPLOADED",
         entity_type="DOCUMENT",
         entity_id=doc.id,
-        details={"file_name": doc.file_name, "file_size": file_size, "hash": file_hash}
+        details={
+            "file_name": doc.file_name,
+            "file_size": file_size,
+            "hash": file_hash,
+            "consent_obtained": customer_consent
+        }
     )
 
     # Initialize LangGraph multi-agent workflow state

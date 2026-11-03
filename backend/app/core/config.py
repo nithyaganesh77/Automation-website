@@ -72,6 +72,10 @@ class Settings(BaseSettings):
     TAX_TOLERANCE_AMOUNT: float = 2.0  # ₹2.00 tolerance
     DEFAULT_CURRENCY: str = "INR"
 
+    # Commercial Billing & Webhooks (Sandbox/Disabled by default)
+    RAZORPAY_WEBHOOK_SECRET: str = Field(default="documind_test_webhook_secret_hmac_2026", validation_alias="RAZORPAY_WEBHOOK_SECRET")
+    ENABLE_LIVE_PAYMENTS: bool = Field(default=False, validation_alias="ENABLE_LIVE_PAYMENTS")
+
     # CORS
     BACKEND_CORS_ORIGINS: List[str] = [
         "http://localhost:3000",

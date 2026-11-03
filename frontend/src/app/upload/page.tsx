@@ -27,6 +27,7 @@ export default function UploadPage() {
   const [processedDocs, setProcessedDocs] = useState<DocumentDetail[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
+  const [consentAgreed, setConsentAgreed] = useState(true);
 
   const handleFiles = (files: FileList | null) => {
     if (!files) return;
@@ -188,9 +189,24 @@ export default function UploadPage() {
             </div>
           )}
 
+          {/* Pilot Customer Consent Checkbox */}
+          <div className="pt-2 border-t border-slate-100 dark:border-navy-800">
+            <label className="flex items-start gap-2.5 text-xs text-slate-600 dark:text-slate-300 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={consentAgreed}
+                onChange={(e) => setConsentAgreed(e.target.checked)}
+                className="mt-0.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span>
+                I confirm that our organization has authorized the ingestion of these business documents under the DocuMind AI pilot evaluation terms and consent to automated OCR, GST reconciliation, and anomaly analysis.
+              </span>
+            </label>
+          </div>
+
           <div className="flex justify-end pt-2">
             <button
-              disabled={uploading}
+              disabled={uploading || !consentAgreed}
               onClick={handleUploadSubmit}
               className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs shadow-md shadow-blue-600/30 transition-all disabled:opacity-50"
             >

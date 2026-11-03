@@ -27,11 +27,13 @@ ENV/
 *.db
 *.sqlite3
 .env
-storage/uploads/*
+storage/uploads/**
 !storage/uploads/.gitkeep
-storage/exports/*
+storage/exports/**
 !storage/exports/.gitkeep
-storage/backups/*
+storage/backups/**
+!storage/backups/.gitkeep
+storage/pilot_install_test/**
 storage/*.xlsx
 
 # Next.js / Node

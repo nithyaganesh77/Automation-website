@@ -7,6 +7,7 @@ from sqlalchemy import func
 from app.models.all_models import (
     Subscription, Organization, OrganizationMember, Document
 )
+from app.core.config import settings
 
 COMMERCIAL_PLANS = {
     "STARTER": {
@@ -180,4 +181,67 @@ class SubscriptionService:
         db.commit()
         db.refresh(sub)
         return sub
+
+    @classmethod
+    def verify_webhook_signature(cls, raw_body: bytes, signature: Optional[str]) -> bool:
+        """Cryptographically verifies Razorpay webhook HMAC SHA256 signature."""
+        if not signature:
+            return False
+        import hmac
+        import hashlib
+        secret = settings.RAZORPAY_WEBHOOK_SECRET.encode("utf-8")
+        expected = hmac.new(secret, raw_body, hashlib.sha256).hexdigest()
+        return hmac.compare_digest(expected, signature)
+
+    @classmethod
+    def handle_webhook_event(cls, db: Session, payload: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Processes commercial payment gateway events (Razorpay compatible):
+        - subscription.activated
+        - subscription.charged / invoice.paid
+        - payment.failed
+        - subscription.cancelled / subscription.completed
+        """
+        event = payload.get("event", "")
+        entity = (
+            payload.get("payload", {}).get("subscription", {}).get("entity", {})
+            or payload.get("payload", {}).get("payment", {}).get("entity", {})
+        )
+
+        sub_id = entity.get("id") or entity.get("subscription_id")
+        notes = entity.get("notes", {})
+        org_id = notes.get("organization_id")
+
+        sub = None
+        if org_id:
+            sub = db.query(Subscription).filter(Subscription.organization_id == org_id).first()
+        elif sub_id:
+            sub = db.query(Subscription).filter(Subscription.razorpay_subscription_id == sub_id).first()
+
+        if not sub:
+            return {"status": "ignored", "reason": "No matching organization subscription found", "event": event}
+
+        now = datetime.now(timezone.utc)
+        if event in ["subscription.activated", "subscription.authenticated"]:
+            sub.status = "ACTIVE"
+            sub.razorpay_subscription_id = sub_id
+        elif event in ["subscription.charged", "invoice.paid"]:
+            sub.status = "ACTIVE"
+            sub.current_period_documents_used = 0  # reset monthly quota on successful payment
+            sub.current_period_start = now
+            sub.current_period_end = now + timedelta(days=30)
+        elif event in ["payment.failed", "subscription.pending"]:
+            sub.status = "PAST_DUE"
+        elif event in ["subscription.cancelled", "subscription.completed"]:
+            sub.status = "CANCELLED"
+
+        db.commit()
+        db.refresh(sub)
+        return {
+            "status": "processed",
+            "event": event,
+            "organization_id": sub.organization_id,
+            "subscription_status": sub.status,
+            "plan_tier": sub.plan_tier
+        }
 

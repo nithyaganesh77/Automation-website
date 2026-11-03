@@ -186,3 +186,4 @@ DocuMind AI is fully hardened, verified, and commercially viable. The system is 
 1. Connect Razorpay webhook handlers (`/api/v1/subscriptions/webhook`) when ready to accept live credit card / UPI payments.
 2. Deploy to a production VPS (e.g., Ubuntu Linux with Docker Compose) following `docs/COMMERCIAL_DEPLOYMENT_GUIDE.md`.
 3. Configure customer domain and Let's Encrypt SSL certificates.
+

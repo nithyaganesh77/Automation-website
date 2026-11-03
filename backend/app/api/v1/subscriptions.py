@@ -1,6 +1,6 @@
-from typing import List
+from typing import List, Optional
 from datetime import datetime, timezone
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request, Header
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from app.database.session import get_db
@@ -111,4 +111,46 @@ def upgrade_subscription(
     )
 
     return get_current_subscription(auth_ctx=auth_ctx, db=db)
+
+
+@router.post("/webhook")
+async def razorpay_subscription_webhook(
+    request: Request,
+    x_razorpay_signature: Optional[str] = Header(None, alias="X-Razorpay-Signature"),
+    db: Session = Depends(get_db)
+):
+    """
+    Secure Razorpay Webhook Endpoint:
+    - Cryptographically verifies X-Razorpay-Signature with HMAC SHA256.
+    - Handles subscription.activated, subscription.charged, payment.failed, subscription.cancelled.
+    - Operates in sandbox/verification mode with zero paid charges until authorized.
+    """
+    raw_body = await request.body()
+
+    # Signature verification
+    is_valid = SubscriptionService.verify_webhook_signature(raw_body, x_razorpay_signature)
+    if not is_valid:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid webhook signature. Request rejected."
+        )
+
+    try:
+        payload = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid JSON payload")
+
+    result = SubscriptionService.handle_webhook_event(db=db, payload=payload)
+
+    AuditService.log_event(
+        db=db,
+        organization_id=result.get("organization_id") or "SYSTEM",
+        user_id="SYSTEM_WEBHOOK",
+        action="SUBSCRIPTION_WEBHOOK_PROCESSED",
+        entity_type="SUBSCRIPTION",
+        entity_id=result.get("organization_id") or "UNKNOWN",
+        details={"event": result.get("event"), "result": result.get("status")}
+    )
+
+    return result
 
