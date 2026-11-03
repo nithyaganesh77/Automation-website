@@ -17,23 +17,33 @@ except ImportError:
 
 class StorageService:
     _minio_client = None
+    _minio_checked = False
+    _minio_available = False
 
     @classmethod
     def get_minio_client(cls):
-        if cls._minio_client is None and Minio:
+        if settings.STORAGE_TYPE != "minio":
+            return None
+
+        if not cls._minio_checked and Minio:
+            cls._minio_checked = True
             try:
-                cls._minio_client = Minio(
+                cli = Minio(
                     settings.MINIO_ENDPOINT,
                     access_key=settings.MINIO_ACCESS_KEY,
                     secret_key=settings.MINIO_SECRET_KEY,
                     secure=settings.MINIO_SECURE
                 )
-                # Check/Create bucket
-                if not cls._minio_client.bucket_exists(settings.MINIO_BUCKET):
-                    cls._minio_client.make_bucket(settings.MINIO_BUCKET)
+                # Quick bucket check with short timeout
+                if not cli.bucket_exists(settings.MINIO_BUCKET):
+                    cli.make_bucket(settings.MINIO_BUCKET)
+                cls._minio_client = cli
+                cls._minio_available = True
+                logger.info("MinIO object storage initialized and connected.")
             except Exception as e:
-                logger.warning(f"MinIO storage unavailable: {e}. Falling back to local storage.")
                 cls._minio_client = None
+                cls._minio_available = False
+                logger.warning(f"MinIO storage unavailable ({e}). Using local storage engine.")
         return cls._minio_client
 
     @staticmethod

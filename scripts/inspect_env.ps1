@@ -51,3 +51,4 @@ foreach ($p in $ports) {
         Write-Host "Port $p : FREE" -ForegroundColor Green
     }
 }
+

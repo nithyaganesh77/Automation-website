@@ -29,6 +29,9 @@ ENV/
 .env
 storage/uploads/*
 !storage/uploads/.gitkeep
+storage/exports/*
+!storage/exports/.gitkeep
+storage/*.xlsx
 
 # Next.js / Node
 node_modules/

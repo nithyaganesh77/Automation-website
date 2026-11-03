@@ -14,23 +14,26 @@ except ImportError:
 
 class VectorStoreService:
     _client = None
+    _checked = False
     COLLECTION_NAME = "documind_documents"
     VECTOR_DIM = 384  # Standard MiniLM / Sentence Transformer dimension
 
     @classmethod
     def get_client(cls):
-        if cls._client is None and QdrantClient:
+        if not cls._checked and QdrantClient:
+            cls._checked = True
             try:
-                cls._client = QdrantClient(url=settings.QDRANT_URL, timeout=3.0)
+                cli = QdrantClient(url=settings.QDRANT_URL, timeout=1.5)
                 # Ensure collection exists
-                collections = [c.name for c in cls._client.get_collections().collections]
+                collections = [c.name for c in cli.get_collections().collections]
                 if cls.COLLECTION_NAME not in collections:
-                    cls._client.create_collection(
+                    cli.create_collection(
                         collection_name=cls.COLLECTION_NAME,
                         vectors_config=VectorParams(size=cls.VECTOR_DIM, distance=Distance.COSINE),
                     )
+                cls._client = cli
             except Exception as e:
-                logger.warning(f"Qdrant vector store connection skipped: {e}. Semantic vector indexing will run on-demand.")
+                logger.warning(f"Qdrant vector store connection skipped: {e}. Semantic vector indexing running locally.")
                 cls._client = None
         return cls._client
 

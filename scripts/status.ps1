@@ -54,3 +54,4 @@ if (Test-Path "backend\.venv\Scripts\python.exe") {
 Write-Host "`n==========================================================" -ForegroundColor Cyan
 Write-Host "                      Status Check Done                   " -ForegroundColor Cyan
 Write-Host "==========================================================" -ForegroundColor Cyan
+

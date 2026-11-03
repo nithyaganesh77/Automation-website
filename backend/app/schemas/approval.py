@@ -34,7 +34,9 @@ class ApprovalRequestOut(BaseModel):
 
 
 class ApprovalActionRequest(BaseModel):
-    action: str  # APPROVE, REJECT, REPROCESS
+    action: Optional[str] = "APPROVE"  # APPROVE, REJECT, REPROCESS
     comments: Optional[str] = None
+    notes: Optional[str] = None
+    reason: Optional[str] = None
     field_changes: Optional[Dict[str, Any]] = None
 

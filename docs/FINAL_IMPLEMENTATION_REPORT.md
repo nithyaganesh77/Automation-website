@@ -160,3 +160,4 @@ docker compose up --build -d
    - Deploy backend to AWS ECS Fargate and frontend to Vercel or AWS CloudFront.
    - Utilize Aurora Serverless PostgreSQL and ElastiCache Redis.
    - Activate Indian Razorpay subscription billing when ready to onboard paid commercial customers.
+

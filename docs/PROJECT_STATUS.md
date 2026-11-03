@@ -96,3 +96,4 @@ Frontend build verified with Next.js 14:
 ✓ Generating static pages (14/14)
 ✓ 0 TypeScript or Lint errors
 ```
+

@@ -33,7 +33,7 @@ def approve_request(
     db: Session = Depends(get_db)
 ):
     req = db.query(ApprovalRequest).filter(
-        ApprovalRequest.id == approval_id,
+        (ApprovalRequest.id == approval_id) | (ApprovalRequest.document_id == approval_id),
         ApprovalRequest.organization_id == auth_ctx.organization_id
     ).first()
 
@@ -58,11 +58,12 @@ def approve_request(
                 supplier.invoice_count += 1
 
     # Record approval history
+    comment_text = action_data.comments or action_data.notes or "Approved by reviewer"
     history = ApprovalHistory(
         approval_request_id=req.id,
         reviewer_id=auth_ctx.user.id,
         action="APPROVE",
-        comments=action_data.comments or "Approved by reviewer",
+        comments=comment_text,
         field_changes=action_data.field_changes or {}
     )
     db.add(history)
@@ -75,7 +76,7 @@ def approve_request(
         action="DOCUMENT_APPROVED",
         entity_type="APPROVAL_REQUEST",
         entity_id=req.id,
-        details={"comments": action_data.comments, "invoice_id": inv.id if inv else None}
+        details={"comments": comment_text, "invoice_id": inv.id if inv else None}
     )
 
     db.refresh(req)
@@ -90,7 +91,7 @@ def reject_request(
     db: Session = Depends(get_db)
 ):
     req = db.query(ApprovalRequest).filter(
-        ApprovalRequest.id == approval_id,
+        (ApprovalRequest.id == approval_id) | (ApprovalRequest.document_id == approval_id),
         ApprovalRequest.organization_id == auth_ctx.organization_id
     ).first()
 
@@ -107,11 +108,12 @@ def reject_request(
     if inv:
         inv.status = "REJECTED"
 
+    comment_text = action_data.comments or action_data.reason or "Rejected by reviewer"
     history = ApprovalHistory(
         approval_request_id=req.id,
         reviewer_id=auth_ctx.user.id,
         action="REJECT",
-        comments=action_data.comments or "Rejected by reviewer",
+        comments=comment_text,
         field_changes=action_data.field_changes or {}
     )
     db.add(history)
@@ -124,7 +126,7 @@ def reject_request(
         action="DOCUMENT_REJECTED",
         entity_type="APPROVAL_REQUEST",
         entity_id=req.id,
-        details={"comments": action_data.comments}
+        details={"comments": comment_text}
     )
 
     db.refresh(req)

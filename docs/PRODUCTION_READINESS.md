@@ -95,3 +95,4 @@ For commercial multi-node cloud deployment:
 | **API Keys Configuration** | Resolved | Configured in `.env` | Both Gemini and Groq live keys verified. |
 | **Background Celery Worker Process** | Low | Async tasks execute inline or via Redis Celery | In production, ensure `celery -A app.core.celery_app worker -l info` runs as a supervised container. |
 | **PaddleOCR Engine on Windows** | Low | Fallback native PyMuPDF active | When deploying to Linux containers, enable full PaddleOCR GPU/CPU engine for noisy scanned camera images. |
+

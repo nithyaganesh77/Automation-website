@@ -1,0 +1,431 @@
+{
+  "start_time": "2026-11-03 13:27:50",
+  "connectivity": {
+    "backend": {
+      "status": "healthy",
+      "service": "DocuMind AI",
+      "version": "1.0.0",
+      "environment": "development"
+    },
+    "frontend_status": 200
+  },
+  "uploads": [
+    {
+      "file_name": "p2_invoice_01_clean_intra.pdf",
+      "description": "Clean Intra-State GST (CGST+SGST 18%)",
+      "document_id": "e2bb8a5d-917d-49ba-bebb-024cb3c4e808",
+      "status": "NEEDS_REVIEW",
+      "document_type": "Sales Invoice",
+      "invoice_number": "INV-2026-GST-01",
+      "grand_total": 47200.0,
+      "validation_status": "WARNING",
+      "agents_count": 9,
+      "elapsed_seconds": 0.0
+    },
+    {
+      "file_name": "p2_invoice_02_clean_inter.pdf",
+      "description": "Clean Inter-State GST (IGST 18%)",
+      "document_id": "bfad20a7-f649-4a22-a77f-31cd8bf32fc6",
+      "status": "NEEDS_REVIEW",
+      "document_type": "Sales Invoice",
+      "invoice_number": "INV-2026-GST-02",
+      "grand_total": 76700.0,
+      "validation_status": "WARNING",
+      "agents_count": 9,
+      "elapsed_seconds": 0.0
+    },
+    {
+      "file_name": "p2_invoice_03_math_mismatch.pdf",
+      "description": "Flawed Line Items vs Subtotal Discrepancy",
+      "document_id": "3dcbcb40-15a6-4223-a55e-b742348669b2",
+      "status": "NEEDS_REVIEW",
+      "document_type": "Sales Invoice",
+      "invoice_number": "INV-2026-ERR-03",
+      "grand_total": 41300.0,
+      "validation_status": "WARNING",
+      "agents_count": 9,
+      "elapsed_seconds": 0.0
+    },
+    {
+      "file_name": "p2_invoice_04_spend_anomaly.pdf",
+      "description": "Spend Spike (>3x historical spend)",
+      "document_id": "0702026b-e395-460e-8bfc-9ec25732609b",
+      "status": "NEEDS_REVIEW",
+      "document_type": "Sales Invoice",
+      "invoice_number": "INV-2026-ANOMALY-04",
+      "grand_total": 531000.0,
+      "validation_status": "WARNING",
+      "agents_count": 9,
+      "elapsed_seconds": 0.0
+    },
+    {
+      "file_name": "p2_invoice_05_invalid_gstin.pdf",
+      "description": "Non-compliant Indian GSTIN Format",
+      "document_id": "1ee6082c-f161-4fa7-aff1-3742b858a4e6",
+      "status": "NEEDS_REVIEW",
+      "document_type": "Sales Invoice",
+      "invoice_number": "INV-2026-GSTIN-05",
+      "grand_total": 11200.0,
+      "validation_status": "WARNING",
+      "agents_count": 9,
+      "elapsed_seconds": 0.0
+    }
+  ],
+  "duplicate_test": {
+    "duplicate_document_id": "da3de621-fcf6-4c55-a901-96ef6a7979cf",
+    "matches_found": 4,
+    "details": [
+      {
+        "id": "a2a2a3ec-0218-46b1-bfe0-c587ec107fed",
+        "matched_document_id": "af693d79-0341-4026-94e5-3e902927213c",
+        "match_type": "SUPPLIER_INVOICE_NUM",
+        "match_score": 0.98,
+        "match_details": {
+          "reason": "Duplicate invoice number 'INV-2026-GST-01' for supplier 'Kavitha Infotech Solutions Pvt Ltd'",
+          "matched_invoice_id": "41e59c37-4a8a-4bbf-8c27-c6ea572f5010",
+          "matched_date": "2026-11-01",
+          "matched_total": 47200.0
+        },
+        "is_confirmed": false
+      },
+      {
+        "id": "1c8cfa33-2be5-41a9-a9f4-b998c332f1c7",
+        "matched_document_id": "8d3391ce-c038-4b11-8882-f4cf5365ffb2",
+        "match_type": "SUPPLIER_INVOICE_NUM",
+        "match_score": 0.98,
+        "match_details": {
+          "reason": "Duplicate invoice number 'INV-2026-GST-01' for supplier 'Kavitha Infotech Solutions Pvt Ltd'",
+          "matched_invoice_id": "4e7a34c5-c47e-4667-84a2-fac877b3b2ae",
+          "matched_date": "2026-11-01",
+          "matched_total": 47200.0
+        },
+        "is_confirmed": false
+      },
+      {
+        "id": "d0f10a04-e5ec-4c4f-b12b-5b77909b5665",
+        "matched_document_id": "3556ad28-32d3-4751-9346-7be16ee661f5",
+        "match_type": "SUPPLIER_INVOICE_NUM",
+        "match_score": 0.98,
+        "match_details": {
+          "reason": "Duplicate invoice number 'INV-2026-GST-01' for supplier 'Kavitha Infotech Solutions Pvt Ltd'",
+          "matched_invoice_id": "3897cf4f-28aa-4157-9a14-a6d418c747ad",
+          "matched_date": "2026-11-01",
+          "matched_total": 47200.0
+        },
+        "is_confirmed": false
+      },
+      {
+        "id": "bfb238ae-9101-4490-b4a6-f84acce3e34d",
+        "matched_document_id": "e2bb8a5d-917d-49ba-bebb-024cb3c4e808",
+        "match_type": "SUPPLIER_INVOICE_NUM",
+        "match_score": 0.98,
+        "match_details": {
+          "reason": "Duplicate invoice number 'INV-2026-GST-01' for supplier 'Kavitha Infotech Solutions Pvt Ltd'",
+          "matched_invoice_id": "43a48cda-7acb-4603-b537-3aabb8506afa",
+          "matched_date": "2026-11-01",
+          "matched_total": 47200.0
+        },
+        "is_confirmed": false
+      }
+    ]
+  },
+  "anomaly_test": {
+    "document_id": "0702026b-e395-460e-8bfc-9ec25732609b",
+    "anomalies_count": 1,
+    "findings": [
+      {
+        "id": "b5fcad45-8caa-4969-b29f-7c3674a1623e",
+        "anomaly_type": "STATISTICAL_DEVIATION",
+        "severity": "HIGH",
+        "description": "Invoice amount (\u20b9531,000.00) is over 3x higher than historical average spend (\u20b9143,960.00) for supplier 'Kavitha Infotech Solutions Pvt Ltd'.",
+        "details": {
+          "historical_average": 143960.0,
+          "historical_invoice_count": 5,
+          "current_amount": 531000.0,
+          "multiplier": 3.69
+        }
+      }
+    ]
+  },
+  "validation_test": {
+    "document_id": "3dcbcb40-15a6-4223-a55e-b742348669b2",
+    "status": "WARNING",
+    "is_valid": true,
+    "errors": []
+  },
+  "approval_test": {
+    "document_id": "e2bb8a5d-917d-49ba-bebb-024cb3c4e808",
+    "status": "APPROVED"
+  },
+  "rejection_test": {
+    "document_id": "3dcbcb40-15a6-4223-a55e-b742348669b2",
+    "status": "REJECTED"
+  },
+  "persistence_test": {},
+  "excel_export_test": {
+    "file_size": 6966,
+    "rows_count": 19,
+    "found_approved_invoice": true
+  },
+  "tenant_isolation_test": {
+    "status": "ENFORCED",
+    "leakage_detected": false
+  },
+  "dashboard_metrics": {
+    "total_documents": 19,
+    "total_invoices": 19,
+    "processed_documents": 18,
+    "pending_approvals": 17,
+    "failed_documents": 0,
+    "duplicate_warnings": 15,
+    "total_invoice_value": "1556400.00",
+    "currency": "INR",
+    "monthly_expense_trend": [
+      {
+        "month": "Jun 2026",
+        "total": 0.0,
+        "tax": 0.0,
+        "count": 0
+      },
+      {
+        "month": "Jul 2026",
+        "total": 0.0,
+        "tax": 0.0,
+        "count": 0
+      },
+      {
+        "month": "Aug 2026",
+        "total": 0.0,
+        "tax": 0.0,
+        "count": 0
+      },
+      {
+        "month": "Sep 2026",
+        "total": 0.0,
+        "tax": 0.0,
+        "count": 0
+      },
+      {
+        "month": "Oct 2026",
+        "total": 0.0,
+        "tax": 0.0,
+        "count": 6
+      },
+      {
+        "month": "Nov 2026",
+        "total": 1556400.0,
+        "tax": 236400.0,
+        "count": 13
+      }
+    ],
+    "processing_status_distribution": [
+      {
+        "name": "Approved",
+        "value": 1
+      },
+      {
+        "name": "Needs Review",
+        "value": 17
+      },
+      {
+        "name": "Rejected",
+        "value": 1
+      }
+    ],
+    "document_type_distribution": [
+      {
+        "name": "Purchase Invoice",
+        "value": 4
+      },
+      {
+        "name": "Purchase Order",
+        "value": 1
+      },
+      {
+        "name": "Receipt",
+        "value": 1
+      },
+      {
+        "name": "Sales Invoice",
+        "value": 13
+      }
+    ],
+    "recent_activity": [
+      {
+        "id": "8db2ca23-741f-4e3d-80cf-fa73ab3c9d10",
+        "action": "Export Generated",
+        "entity": "EXPORT",
+        "timestamp": "2026-11-03 07:57",
+        "details": {
+          "type": "INVOICES",
+          "format": "EXCEL",
+          "record_count": 19
+        }
+      },
+      {
+        "id": "d6afa7b6-31d7-4a32-8104-da07f22f00ce",
+        "action": "Document Rejected",
+        "entity": "APPROVAL_REQUEST",
+        "timestamp": "2026-11-03 07:57",
+        "details": {
+          "comments": "Rejected: Line item amounts sum to 30,000 INR, but stated subtotal is 35,000 INR."
+        }
+      },
+      {
+        "id": "4e1e871d-4b15-4bb6-bf7b-e29553532216",
+        "action": "Document Approved",
+        "entity": "APPROVAL_REQUEST",
+        "timestamp": "2026-11-03 07:57",
+        "details": {
+          "comments": "All line items and GST calculations reconciled perfectly against PO.",
+          "invoice_id": "43a48cda-7acb-4603-b537-3aabb8506afa"
+        }
+      },
+      {
+        "id": "aa5a0ce6-ea63-401d-b825-81839502635e",
+        "action": "User Logged In",
+        "entity": "USER",
+        "timestamp": "2026-11-03 07:57",
+        "details": {}
+      },
+      {
+        "id": "25883e77-5fba-4f16-9a22-ee4abb3f3fb2",
+        "action": "User Logged In",
+        "entity": "USER",
+        "timestamp": "2026-11-03 07:57",
+        "details": {}
+      },
+      {
+        "id": "df279078-4479-4082-a3c9-aa4cf421c13e",
+        "action": "User Logged In",
+        "entity": "USER",
+        "timestamp": "2026-11-03 07:56",
+        "details": {}
+      },
+      {
+        "id": "15d43e6f-5ad0-4d89-9e2b-b80b02161731",
+        "action": "User Logged In",
+        "entity": "USER",
+        "timestamp": "2026-11-03 07:56",
+        "details": {}
+      },
+      {
+        "id": "f6a21684-216a-438d-98b0-fec441051deb",
+        "action": "User Logged In",
+        "entity": "USER",
+        "timestamp": "2026-11-03 07:56",
+        "details": {}
+      }
+    ]
+  },
+  "agents_metrics": [
+    {
+      "agent_id": "agent-1",
+      "name": "Document Intake Agent",
+      "purpose": "Document reception, MIME validation, SHA-256 generation, and duplicate checks.",
+      "status": "ACTIVE",
+      "total_executions": 19,
+      "successful_executions": 19,
+      "failed_executions": 0,
+      "avg_latency_ms": 12.1,
+      "last_execution_at": "2026-11-03T07:49:16.270481",
+      "last_error": null
+    },
+    {
+      "agent_id": "agent-2",
+      "name": "OCR Agent",
+      "purpose": "Multi-page text extraction, PDF native parsing, scanned layout extraction.",
+      "status": "ACTIVE",
+      "total_executions": 19,
+      "successful_executions": 19,
+      "failed_executions": 0,
+      "avg_latency_ms": 31.2,
+      "last_execution_at": "2026-11-03T07:49:16.382204",
+      "last_error": null
+    },
+    {
+      "agent_id": "agent-3",
+      "name": "Classification Agent",
+      "purpose": "Intelligent categorization into invoices, POs, receipts, bills, and contracts.",
+      "status": "ACTIVE",
+      "total_executions": 19,
+      "successful_executions": 19,
+      "failed_executions": 0,
+      "avg_latency_ms": 6344.3,
+      "last_execution_at": "2026-11-03T07:49:22.215831",
+      "last_error": null
+    },
+    {
+      "agent_id": "agent-4",
+      "name": "Extraction Agent",
+      "purpose": "Structured JSON schema field and line item extraction with evidence tracking.",
+      "status": "ACTIVE",
+      "total_executions": 19,
+      "successful_executions": 19,
+      "failed_executions": 0,
+      "avg_latency_ms": 18829.0,
+      "last_execution_at": "2026-11-03T07:49:48.659321",
+      "last_error": null
+    },
+    {
+      "agent_id": "agent-5",
+      "name": "Validation Agent",
+      "purpose": "Deterministic financial math reconciliation, GSTIN checksums, and date logic.",
+      "status": "ACTIVE",
+      "total_executions": 19,
+      "successful_executions": 19,
+      "failed_executions": 0,
+      "avg_latency_ms": 18.9,
+      "last_execution_at": "2026-11-03T07:49:48.671929",
+      "last_error": null
+    },
+    {
+      "agent_id": "agent-6",
+      "name": "Duplicate Detection Agent",
+      "purpose": "Cryptographic file hash matching, vendor invoice deduplication, and fuzzy search.",
+      "status": "ACTIVE",
+      "total_executions": 19,
+      "successful_executions": 19,
+      "failed_executions": 0,
+      "avg_latency_ms": 13.4,
+      "last_execution_at": "2026-11-03T07:49:48.685091",
+      "last_error": null
+    },
+    {
+      "agent_id": "agent-7",
+      "name": "Anomaly Detection Agent",
+      "purpose": "Statistical vendor spend variance, tax rate anomalies, and pattern deviations.",
+      "status": "ACTIVE",
+      "total_executions": 19,
+      "successful_executions": 19,
+      "failed_executions": 0,
+      "avg_latency_ms": 5.6,
+      "last_execution_at": "2026-11-03T07:49:48.693013",
+      "last_error": null
+    },
+    {
+      "agent_id": "agent-8",
+      "name": "Decision Agent",
+      "purpose": "Confidence threshold evaluation and human approval routing orchestration.",
+      "status": "ACTIVE",
+      "total_executions": 19,
+      "successful_executions": 19,
+      "failed_executions": 0,
+      "avg_latency_ms": 23.7,
+      "last_execution_at": "2026-11-03T07:49:48.706632",
+      "last_error": null
+    },
+    {
+      "agent_id": "agent-9",
+      "name": "Reporting and Finalization Agent",
+      "purpose": "PostgreSQL data persistence and accounting export readiness.",
+      "status": "ACTIVE",
+      "total_executions": 19,
+      "successful_executions": 19,
+      "failed_executions": 0,
+      "avg_latency_ms": 28.6,
+      "last_execution_at": "2026-11-03T07:49:48.743787",
+      "last_error": null
+    }
+  ]
+}
