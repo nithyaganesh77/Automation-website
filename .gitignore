@@ -31,6 +31,7 @@ storage/uploads/*
 !storage/uploads/.gitkeep
 storage/exports/*
 !storage/exports/.gitkeep
+storage/backups/*
 storage/*.xlsx
 
 # Next.js / Node

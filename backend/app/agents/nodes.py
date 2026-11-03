@@ -193,6 +193,12 @@ def extraction_agent_node(state: DocuMindState) -> Dict[str, Any]:
                 )
                 db.add(db_field)
 
+        # Update document token & cost metrics
+        doc = db.query(Document).filter(Document.id == doc_id).first()
+        if doc:
+            doc.extracted_tokens = tokens
+            doc.estimated_cost_usd = cost
+
         db.commit()
         latency = int((time.time() - start_time) * 1000)
 

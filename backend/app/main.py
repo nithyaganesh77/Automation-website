@@ -7,7 +7,7 @@ from starlette.responses import Response
 
 from app.core.config import settings
 from app.core.logging import logger
-from app.database.session import engine, Base
+from app.database.session import engine, Base, check_db_health
 import app.models  # Ensure all models are registered
 
 # API Routers
@@ -20,6 +20,9 @@ from app.api.v1.agents import router as agents_router
 from app.api.v1.reports import router as reports_router
 from app.api.v1.settings import router as settings_router
 from app.api.v1.notifications import router as notifications_router
+from app.api.v1.onboarding import router as onboarding_router
+from app.api.v1.subscriptions import router as subscriptions_router
+from app.api.v1.super_admin import router as super_admin_router
 
 # Initialize FastAPI Application
 app = FastAPI(
@@ -69,11 +72,13 @@ def on_startup():
 # Health Check Endpoints
 @app.get("/health", tags=["Health"])
 def health_check():
+    db_health = check_db_health()
     return {
-        "status": "healthy",
+        "status": "healthy" if db_health.get("status") == "healthy" else "degraded",
         "service": settings.PROJECT_NAME,
         "version": settings.VERSION,
-        "environment": settings.ENVIRONMENT
+        "environment": settings.ENVIRONMENT,
+        "database": db_health
     }
 
 
@@ -106,6 +111,9 @@ app.include_router(agents_router, prefix=settings.API_V1_PREFIX)
 app.include_router(reports_router, prefix=settings.API_V1_PREFIX)
 app.include_router(settings_router, prefix=settings.API_V1_PREFIX)
 app.include_router(notifications_router, prefix=settings.API_V1_PREFIX)
+app.include_router(onboarding_router, prefix=settings.API_V1_PREFIX)
+app.include_router(subscriptions_router, prefix=settings.API_V1_PREFIX)
+app.include_router(super_admin_router, prefix=settings.API_V1_PREFIX)
 
 
 if __name__ == "__main__":

@@ -12,6 +12,7 @@ from app.services.storage import StorageService
 from app.agents.graph import execute_document_workflow
 from app.agents.state import DocuMindState
 from app.services.audit_service import AuditService
+from app.services.subscription_service import SubscriptionService
 
 router = APIRouter(prefix="/documents", tags=["Documents"])
 
@@ -22,6 +23,14 @@ async def upload_document(
     auth_ctx: AuthenticatedContext = Depends(get_current_user_context),
     db: Session = Depends(get_db)
 ):
+    # Enforce commercial subscription usage quota
+    can_upload, quota_reason = SubscriptionService.check_upload_quota(db, auth_ctx.organization_id)
+    if not can_upload:
+        raise HTTPException(
+            status_code=status.HTTP_402_PAYMENT_REQUIRED,
+            detail=quota_reason
+        )
+
     saved_path, file_hash, file_size, safe_name = await StorageService.save_upload_file(
         file, auth_ctx.organization_id
     )
@@ -67,6 +76,7 @@ async def upload_document(
     # Execute workflow
     try:
         execute_document_workflow(state)
+        SubscriptionService.increment_document_count(db, auth_ctx.organization_id)
     except Exception as e:
         doc.status = "FAILED"
         doc.error_message = str(e)

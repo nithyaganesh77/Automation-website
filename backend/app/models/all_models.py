@@ -24,6 +24,16 @@ class Organization(Base):
     id = Column(String(36), primary_key=True, default=generate_uuid)
     name = Column(String(255), nullable=False)
     slug = Column(String(100), unique=True, nullable=False, index=True)
+    legal_name = Column(String(255), nullable=True)
+    gstin = Column(String(15), nullable=True)
+    pan = Column(String(10), nullable=True)
+    address = Column(Text, nullable=True)
+    city = Column(String(100), nullable=True)
+    state = Column(String(100), nullable=True)
+    pincode = Column(String(10), nullable=True)
+    phone = Column(String(20), nullable=True)
+    onboarding_completed = Column(Boolean, default=False, nullable=False)
+    onboarding_step = Column(String(50), default="PROFILE", nullable=False)
     created_at = Column(DateTime(timezone=True), default=utc_now, nullable=False)
     updated_at = Column(DateTime(timezone=True), default=utc_now, onupdate=utc_now, nullable=False)
 
@@ -34,6 +44,8 @@ class Organization(Base):
     suppliers = relationship("Supplier", back_populates="organization", cascade="all, delete-orphan")
     customers = relationship("Customer", back_populates="organization", cascade="all, delete-orphan")
     settings = relationship("OrganizationSetting", back_populates="organization", uselist=False, cascade="all, delete-orphan")
+    subscription = relationship("Subscription", back_populates="organization", uselist=False, cascade="all, delete-orphan")
+    invitations = relationship("OrganizationInvitation", back_populates="organization", cascade="all, delete-orphan")
 
 
 class User(Base):
@@ -97,6 +109,8 @@ class Document(Base):
     status = Column(String(50), default="UPLOADED", nullable=False, index=True)
     document_type = Column(String(50), default="Other", nullable=False)
     confidence = Column(Float, default=0.0, nullable=False)
+    extracted_tokens = Column(Integer, default=0, nullable=False)
+    estimated_cost_usd = Column(Numeric(10, 6), default=Decimal("0.000000"), nullable=False)
     error_message = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), default=utc_now, nullable=False, index=True)
     updated_at = Column(DateTime(timezone=True), default=utc_now, onupdate=utc_now, nullable=False)
@@ -417,13 +431,60 @@ class OrganizationSetting(Base):
     id = Column(String(36), primary_key=True, default=generate_uuid)
     organization_id = Column(String(36), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False, unique=True, index=True)
     ai_provider = Column(String(50), default="gemini", nullable=False)
+    primary_provider = Column(String(50), default="gemini", nullable=False)
+    fallback_provider = Column(String(50), default="groq", nullable=False)
     api_key_configured = Column(Boolean, default=False, nullable=False)
+    gemini_api_key_masked = Column(String(100), nullable=True)
+    groq_api_key_masked = Column(String(100), nullable=True)
     confidence_threshold = Column(Float, default=0.85, nullable=False)
     tax_tolerance = Column(Float, default=2.00, nullable=False)
     auto_approve_threshold = Column(Float, default=0.98, nullable=False)
     currency = Column(String(10), default="INR", nullable=False)
+    monthly_budget_usd = Column(Float, default=100.0, nullable=False)
     created_at = Column(DateTime(timezone=True), default=utc_now, nullable=False)
     updated_at = Column(DateTime(timezone=True), default=utc_now, onupdate=utc_now, nullable=False)
 
     organization = relationship("Organization", back_populates="settings")
+
+
+class Subscription(Base):
+    __tablename__ = "subscriptions"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    organization_id = Column(String(36), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False, unique=True, index=True)
+    plan_tier = Column(String(50), default="STARTER", nullable=False)  # STARTER, PROFESSIONAL, ENTERPRISE
+    status = Column(String(50), default="TRIAL", nullable=False, index=True)  # TRIAL, ACTIVE, PAST_DUE, CANCELLED, EXPIRED
+    monthly_document_limit = Column(Integer, default=50, nullable=False)
+    max_users_limit = Column(Integer, default=3, nullable=False)
+    current_period_documents_used = Column(Integer, default=0, nullable=False)
+    current_period_start = Column(DateTime(timezone=True), default=utc_now, nullable=False)
+    current_period_end = Column(DateTime(timezone=True), nullable=True)
+    trial_ends_at = Column(DateTime(timezone=True), nullable=True)
+    billing_cycle = Column(String(20), default="MONTHLY", nullable=False)
+    price_amount = Column(Numeric(10, 2), default=Decimal("0.00"), nullable=False)
+    currency = Column(String(10), default="INR", nullable=False)
+    razorpay_customer_id = Column(String(100), nullable=True)
+    razorpay_subscription_id = Column(String(100), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=utc_now, nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=utc_now, onupdate=utc_now, nullable=False)
+
+    organization = relationship("Organization", back_populates="subscription")
+
+
+class OrganizationInvitation(Base):
+    __tablename__ = "organization_invitations"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    organization_id = Column(String(36), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False, index=True)
+    email = Column(String(255), nullable=False, index=True)
+    role = Column(String(50), default="Reviewer", nullable=False)  # Super Admin, Organization Owner, Administrator, Accountant, Reviewer, Read-only User
+    invited_by_user_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    token = Column(String(100), unique=True, nullable=False, index=True)
+    status = Column(String(50), default="PENDING", nullable=False, index=True)  # PENDING, ACCEPTED, EXPIRED, REVOKED
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+    created_at = Column(DateTime(timezone=True), default=utc_now, nullable=False)
+
+    organization = relationship("Organization", back_populates="invitations")
+    inviter = relationship("User")
+
 

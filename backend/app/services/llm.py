@@ -2,10 +2,16 @@ import os
 import re
 import json
 import time
+import hashlib
 from typing import Dict, Any, Optional, Tuple
 from decimal import Decimal
 from app.core.config import settings
 from app.core.logging import logger
+
+# In-memory caches for fast extraction & classification reuse
+_CLASSIFICATION_CACHE: Dict[str, Tuple[str, float, Dict[str, Any]]] = {}
+_EXTRACTION_CACHE: Dict[str, Tuple[Dict[str, Any], int, Decimal]] = {}
+_CIRCUIT_BREAKERS: Dict[str, float] = {}
 
 # Telemetry in-memory store for AI usage tracking
 AI_METRICS = {
@@ -79,98 +85,161 @@ class LLMService:
         return False, f"Unsupported provider: {provider}"
 
     @classmethod
+    def _quick_preclassify(cls, text: str) -> Optional[Tuple[str, float, Dict[str, Any]]]:
+        """0.1ms deterministic layout pre-classifier for high-confidence business documents."""
+        upper = text[:2000].upper()
+        if ("TAX INVOICE" in upper or "INVOICE" in upper) and ("GSTIN" in upper or "TOTAL" in upper):
+            return "Sales Invoice", 0.98, {"document_type": "Sales Invoice", "confidence": 0.98, "reason": "Deterministic GST Tax Invoice layout matched", "method": "fast_heuristic"}
+        if "PURCHASE ORDER" in upper or "P.O. NO" in upper:
+            return "Purchase Order", 0.98, {"document_type": "Purchase Order", "confidence": 0.98, "reason": "Purchase Order header matched", "method": "fast_heuristic"}
+        if "DELIVERY CHALLAN" in upper:
+            return "Delivery Challan", 0.98, {"document_type": "Delivery Challan", "confidence": 0.98, "reason": "Delivery Challan header matched", "method": "fast_heuristic"}
+        if "RECEIPT" in upper and ("PAYMENT" in upper or "RECEIVED" in upper):
+            return "Receipt", 0.95, {"document_type": "Receipt", "confidence": 0.95, "reason": "Receipt header matched", "method": "fast_heuristic"}
+        return None
+
+    @classmethod
     def classify_document(cls, document_text: str) -> Tuple[str, float, Dict[str, Any]]:
         """
-        Classifies document with automatic failover:
-        Gemini (Primary) -> Groq (Fallback) -> Local Deterministic Engine.
+        Classifies document with automatic failover and multi-level caching:
+        Cache -> Fast Pre-Classifier -> Gemini (Primary) -> Groq (Fallback) -> Local Engine.
         """
+        text_hash = hashlib.sha256(document_text.strip().encode()).hexdigest()
+        if text_hash in _CLASSIFICATION_CACHE:
+            return _CLASSIFICATION_CACHE[text_hash]
+
+        # Fast deterministic pre-classifier (<1ms latency)
+        fast_result = cls._quick_preclassify(document_text)
+        if fast_result:
+            _CLASSIFICATION_CACHE[text_hash] = fast_result
+            return fast_result
+
         # Privacy Mode Check
         if settings.DISABLE_EXTERNAL_AI:
             logger.info("Privacy mode enabled: Executing local deterministic document classification.")
-            return cls._classify_deterministic(document_text)
+            res = cls._classify_deterministic(document_text)
+            _CLASSIFICATION_CACHE[text_hash] = res
+            return res
 
         # Quota Budget Check
         total_reqs = AI_METRICS["gemini_requests"] + AI_METRICS["groq_requests"]
         if settings.SAFE_QUOTA_MODE and total_reqs >= settings.DAILY_REQUEST_LIMIT:
             logger.warning("Daily request limit reached. Falling back to local classification to avoid charges.")
-            return cls._classify_deterministic(document_text)
+            res = cls._classify_deterministic(document_text)
+            _CLASSIFICATION_CACHE[text_hash] = res
+            return res
 
-        # 1. Try Primary: Gemini
-        if settings.GEMINI_API_KEY:
-            try:
-                result = cls._classify_with_gemini(document_text)
-                AI_METRICS["gemini_requests"] += 1
-                AI_METRICS["last_active_provider"] = "gemini"
-                AI_METRICS["gemini_status"] = "ONLINE"
-                return result
-            except Exception as e:
-                AI_METRICS["gemini_failures"] += 1
-                AI_METRICS["gemini_status"] = "RATE_LIMITED" if "429" in str(e) or "quota" in str(e).lower() else "ERROR"
-                AI_METRICS["fallback_events"] += 1
-                logger.warning(f"Primary provider (Gemini) failed: {e}. Executing automatic failover to Groq...")
+        # Dynamic Provider Order based on settings.AI_PRIMARY_PROVIDER
+        providers = ["gemini", "groq"] if settings.AI_PRIMARY_PROVIDER == "gemini" else ["groq", "gemini"]
 
-        # 2. Try Fallback: Groq
-        if settings.GROQ_API_KEY:
-            try:
-                result = cls._classify_with_groq(document_text)
-                AI_METRICS["groq_requests"] += 1
-                AI_METRICS["last_active_provider"] = "groq"
-                AI_METRICS["groq_status"] = "ONLINE"
-                return result
-            except Exception as e:
-                AI_METRICS["groq_failures"] += 1
-                AI_METRICS["groq_status"] = "ERROR"
-                logger.warning(f"Fallback provider (Groq) failed: {e}. Executing local deterministic classifier.")
+        for prov in providers:
+            if prov == "gemini":
+                gemini_ready = bool(settings.GEMINI_API_KEY) and (time.time() > _CIRCUIT_BREAKERS.get("gemini", 0.0))
+                if gemini_ready:
+                    try:
+                        result = cls._classify_with_gemini(document_text)
+                        AI_METRICS["gemini_requests"] += 1
+                        AI_METRICS["last_active_provider"] = "gemini"
+                        AI_METRICS["gemini_status"] = "ONLINE"
+                        _CLASSIFICATION_CACHE[text_hash] = result
+                        return result
+                    except Exception as e:
+                        AI_METRICS["gemini_failures"] += 1
+                        AI_METRICS["gemini_status"] = "RATE_LIMITED" if "429" in str(e) or "quota" in str(e).lower() else "ERROR"
+                        AI_METRICS["fallback_events"] += 1
+                        _CIRCUIT_BREAKERS["gemini"] = time.time() + 180.0  # 3-minute circuit breaker
+                        logger.warning(f"Gemini classification failed: {e}. Circuit opened for 180s. Failing over...")
+            elif prov == "groq":
+                groq_ready = bool(settings.GROQ_API_KEY) and (time.time() > _CIRCUIT_BREAKERS.get("groq", 0.0))
+                if groq_ready:
+                    try:
+                        result = cls._classify_with_groq(document_text)
+                        AI_METRICS["groq_requests"] += 1
+                        AI_METRICS["last_active_provider"] = "groq"
+                        AI_METRICS["groq_status"] = "ONLINE"
+                        _CLASSIFICATION_CACHE[text_hash] = result
+                        return result
+                    except Exception as e:
+                        AI_METRICS["groq_failures"] += 1
+                        AI_METRICS["groq_status"] = "ERROR"
+                        AI_METRICS["fallback_events"] += 1
+                        _CIRCUIT_BREAKERS["groq"] = time.time() + 180.0
+                        logger.warning(f"Groq classification failed: {e}. Failing over...")
 
         # 3. Local Deterministic Parser
-        return cls._classify_deterministic(document_text)
+        res = cls._classify_deterministic(document_text)
+        _CLASSIFICATION_CACHE[text_hash] = res
+        return res
 
     @classmethod
     def extract_invoice_data(cls, document_text: str) -> Tuple[Dict[str, Any], int, Decimal]:
         """
-        Extracts structured invoice data with automatic failover:
-        Gemini (Primary) -> Groq (Fallback) -> Local Deterministic Engine.
+        Extracts structured invoice data with automatic failover and hash caching:
+        Cache -> Gemini (Primary) -> Groq (Fallback) -> Local Deterministic Engine.
         """
+        text_hash = hashlib.sha256(document_text.strip().encode()).hexdigest()
+        if text_hash in _EXTRACTION_CACHE:
+            logger.info("Retrieved extraction results from high-speed cache.")
+            return _EXTRACTION_CACHE[text_hash]
+
         if settings.DISABLE_EXTERNAL_AI:
             logger.info("Privacy mode enabled: Executing local deterministic invoice extraction.")
-            return cls._extract_deterministic(document_text)
+            res = cls._extract_deterministic(document_text)
+            _EXTRACTION_CACHE[text_hash] = res
+            return res
 
         total_reqs = AI_METRICS["gemini_requests"] + AI_METRICS["groq_requests"]
         if settings.SAFE_QUOTA_MODE and total_reqs >= settings.DAILY_REQUEST_LIMIT:
             logger.warning("Daily request limit reached. Falling back to local extraction to avoid charges.")
-            return cls._extract_deterministic(document_text)
+            res = cls._extract_deterministic(document_text)
+            _EXTRACTION_CACHE[text_hash] = res
+            return res
 
-        # 1. Try Primary: Gemini
-        if settings.GEMINI_API_KEY:
-            try:
-                data, tokens, cost = cls._extract_with_gemini(document_text)
-                AI_METRICS["gemini_requests"] += 1
-                AI_METRICS["gemini_tokens"] += tokens
-                AI_METRICS["last_active_provider"] = "gemini"
-                AI_METRICS["gemini_status"] = "ONLINE"
-                return data, tokens, cost
-            except Exception as e:
-                AI_METRICS["gemini_failures"] += 1
-                AI_METRICS["gemini_status"] = "RATE_LIMITED" if "429" in str(e) or "quota" in str(e).lower() else "ERROR"
-                AI_METRICS["fallback_events"] += 1
-                logger.warning(f"Gemini extraction failed: {e}. Automatically failing over to Groq...")
+        # Dynamic Provider Order based on settings.AI_PRIMARY_PROVIDER
+        providers = ["gemini", "groq"] if settings.AI_PRIMARY_PROVIDER == "gemini" else ["groq", "gemini"]
 
-        # 2. Try Fallback: Groq
-        if settings.GROQ_API_KEY:
-            try:
-                data, tokens, cost = cls._extract_with_groq(document_text)
-                AI_METRICS["groq_requests"] += 1
-                AI_METRICS["groq_tokens"] += tokens
-                AI_METRICS["last_active_provider"] = "groq"
-                AI_METRICS["groq_status"] = "ONLINE"
-                return data, tokens, cost
-            except Exception as e:
-                AI_METRICS["groq_failures"] += 1
-                AI_METRICS["groq_status"] = "ERROR"
-                logger.warning(f"Groq extraction failed: {e}. Executing local deterministic engine.")
+        for prov in providers:
+            if prov == "gemini":
+                gemini_ready = bool(settings.GEMINI_API_KEY) and (time.time() > _CIRCUIT_BREAKERS.get("gemini", 0.0))
+                if gemini_ready:
+                    try:
+                        data, tokens, cost = cls._extract_with_gemini(document_text)
+                        AI_METRICS["gemini_requests"] += 1
+                        AI_METRICS["gemini_tokens"] += tokens
+                        AI_METRICS["last_active_provider"] = "gemini"
+                        AI_METRICS["gemini_status"] = "ONLINE"
+                        res = (data, tokens, cost)
+                        _EXTRACTION_CACHE[text_hash] = res
+                        return res
+                    except Exception as e:
+                        AI_METRICS["gemini_failures"] += 1
+                        AI_METRICS["gemini_status"] = "RATE_LIMITED" if "429" in str(e) or "quota" in str(e).lower() else "ERROR"
+                        AI_METRICS["fallback_events"] += 1
+                        _CIRCUIT_BREAKERS["gemini"] = time.time() + 180.0  # 3-minute circuit breaker
+                        logger.warning(f"Gemini extraction failed: {e}. Circuit opened for 180s. Failing over...")
+            elif prov == "groq":
+                groq_ready = bool(settings.GROQ_API_KEY) and (time.time() > _CIRCUIT_BREAKERS.get("groq", 0.0))
+                if groq_ready:
+                    try:
+                        data, tokens, cost = cls._extract_with_groq(document_text)
+                        AI_METRICS["groq_requests"] += 1
+                        AI_METRICS["groq_tokens"] += tokens
+                        AI_METRICS["last_active_provider"] = "groq"
+                        AI_METRICS["groq_status"] = "ONLINE"
+                        res = (data, tokens, cost)
+                        _EXTRACTION_CACHE[text_hash] = res
+                        return res
+                    except Exception as e:
+                        AI_METRICS["groq_failures"] += 1
+                        AI_METRICS["groq_status"] = "ERROR"
+                        AI_METRICS["fallback_events"] += 1
+                        _CIRCUIT_BREAKERS["groq"] = time.time() + 180.0
+                        logger.warning(f"Groq extraction failed: {e}. Failing over...")
 
         # 3. Local Deterministic Parser
-        return cls._extract_deterministic(document_text)
+        res = cls._extract_deterministic(document_text)
+        _EXTRACTION_CACHE[text_hash] = res
+        return res
 
     # ---------------- Provider Implementations ----------------
 
@@ -259,13 +328,17 @@ class LLMService:
         )
         response = client.models.generate_content(
             model=settings.GEMINI_MODEL,
-            contents=prompt
+            contents=prompt,
+            config={"response_mime_type": "application/json"}
         )
         content = response.text or "{}"
         match = re.search(r"\{.*\}", content, re.DOTALL)
         if match:
             parsed = json.loads(match.group(0))
-            return parsed, 1200, Decimal("0.000000")  # Free Tier: $0.00
+            tokens = getattr(getattr(response, "usage_metadata", None), "total_token_count", 1200) or 1200
+            cost = Decimal(str(round(tokens * 0.00000025, 6)))
+            AI_METRICS["estimated_cost_usd"] += float(cost)
+            return parsed, tokens, cost
         return {}, 0, Decimal("0.000000")
 
     @classmethod
@@ -308,14 +381,17 @@ class LLMService:
                 {"role": "user", "content": f"Document Text:\n{text[:8000]}"}
             ],
             temperature=0.1,
-            max_tokens=2048
+            max_tokens=2048,
+            response_format={"type": "json_object"}
         )
         content = res.choices[0].message.content or "{}"
         match = re.search(r"\{.*\}", content, re.DOTALL)
         if match:
             parsed = json.loads(match.group(0))
             tokens = res.usage.total_tokens if res.usage else 800
-            return parsed, tokens, Decimal("0.000000")  # Free Tier: $0.00
+            cost = Decimal(str(round(tokens * 0.00000025, 6)))
+            AI_METRICS["estimated_cost_usd"] += float(cost)
+            return parsed, tokens, cost
         tokens = res.usage.total_tokens if res.usage else 0
         return {}, tokens, Decimal("0.000000")
 

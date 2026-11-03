@@ -12,6 +12,9 @@ import {
   BarChart3,
   Settings,
   ShieldCheck,
+  CreditCard,
+  Sparkles,
+  ShieldAlert,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -23,6 +26,9 @@ const navigation = [
   { name: "Suppliers", href: "/suppliers", icon: Building2 },
   { name: "AI Agent Monitor", href: "/agents", icon: Cpu },
   { name: "Reports & Analytics", href: "/reports", icon: BarChart3 },
+  { name: "Subscription & Plans", href: "/subscriptions", icon: CreditCard },
+  { name: "Onboarding Wizard", href: "/onboarding", icon: Sparkles },
+  { name: "Platform Admin", href: "/admin", icon: ShieldAlert },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 
