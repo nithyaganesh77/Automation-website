@@ -40,12 +40,13 @@ DocuMind AI is a production-grade enterprise SaaS platform for autonomous docume
 
 ## 2. Technology Stack
 
-- **Frontend**: Next.js 14 (App Router), TypeScript, Tailwind CSS, Lucide Icons, Recharts.
 - **Backend**: FastAPI, Python 3.11, Pydantic v2, SQLAlchemy 2.0, Alembic.
-- **AI & Agent Orchestration**: LangGraph, Google Gemini API, Groq API, Sentence Transformers.
-- **Document Processing**: PyMuPDF (`fitz`), `python-docx`, `openpyxl`, `Pillow`.
-- **Database & Storage**: PostgreSQL (Docker), SQLite (local dev), Redis, MinIO S3, Qdrant.
-- **DevOps & Monitoring**: Docker Compose (9 services with health checks), Prometheus, Grafana.
+- **Frontend**: Next.js 14 (App Router), TypeScript, Tailwind CSS, Lucide Icons, Recharts (24 Application Routes).
+- **AI & Agent Orchestration**: LangGraph, Google Gemini API (Primary), Groq API (Fallback), Local Regex/Heuristic Engine.
+- **Document Processing**: PyMuPDF (`fitz`), `python-docx`, `openpyxl`, `Pillow`, PaddleOCR.
+- **Database & Storage**: PostgreSQL 16 (QueuePool) & SQLite 3 (Dialect-routed fallback), Redis, MinIO S3, Qdrant.
+- **Data Protection & Compliance**: DPDP Act 2023 consent lifecycle, GDPR export/forget-me, Tenant air-gap (`DISABLE_EXTERNAL_AI`).
+- **DevOps & Monitoring**: Docker Compose (9 services with health checks), Prometheus, Grafana, Disaster Recovery Manager.
 
 ---
 
@@ -120,15 +121,15 @@ documind-ai/
 │   │   ├── agents/         # LangGraph 9-Agent workflow & state definitions
 │   │   ├── core/           # Config, security, logging, Celery
 │   │   ├── database/       # SQLAlchemy engine & session management
-│   │   ├── models/         # 24 normalized SQLAlchemy database models
+│   │   ├── models/         # 27 normalized SQLAlchemy database models
 │   │   ├── schemas/        # Strict Pydantic request/response schemas
 │   │   ├── services/       # OCR, LLM failover, validation, duplicate & anomaly engines
 │   │   └── main.py         # FastAPI application entrypoint
-│   ├── tests/              # Pytest automated test suite
+│   ├── tests/              # Pytest automated test suite (39/39 passing)
 │   └── requirements.txt    # Backend Python dependencies
 ├── frontend/
 │   ├── src/
-│   │   ├── app/            # Next.js 14 App Router (All 10 full enterprise pages)
+│   │   ├── app/            # Next.js 14 App Router (All 24 full enterprise pages)
 │   │   ├── components/     # UI components, layout shell, navigation
 │   │   ├── lib/            # Typed API client, utility functions
 │   │   └── types/          # Shared TypeScript type definitions
@@ -138,11 +139,11 @@ documind-ai/
 │   ├── docker/             # Dockerfile.backend & Dockerfile.frontend
 │   └── monitoring/         # Prometheus scrape configuration & Grafana provisioning
 ├── evaluation/
-│   ├── datasets/           # 6 Synthetic test invoices (PDFs)
+│   ├── datasets/           # 50 Indian GST benchmark invoices + Phase 2 edge cases
 │   ├── prompts/            # Promptfoo LLM prompt evaluation suite
 │   └── AI_EVALUATION.md    # AI accuracy & retrieval benchmarks documentation
-├── docs/                   # Architecture, API, Security, and AWS Deployment guides
-├── scripts/                # Synthetic PDF generator & database seed scripts
+├── docs/                   # Architecture, Security, Database, and Release guides
+├── scripts/                # Disaster recovery, installation verify, and synthetic scripts
 ├── docker-compose.yml      # Multi-container orchestration (9 services)
 ├── setup.ps1               # Automated Windows environment setup
 ├── start.ps1               # Development start script
@@ -154,10 +155,12 @@ documind-ai/
 
 ---
 
-## 7. Comprehensive Documentation
+## 7. Comprehensive Documentation & Release Package
 
+- [Customer Installation & Deployment Guide](file:///docs/CUSTOMER_INSTALLATION_GUIDE.md)
+- [Customer Pilot Onboarding Guide](file:///docs/PHASE_5I_CUSTOMER_PILOT_GUIDE.md)
+- [Final Security Review](file:///docs/FINAL_SECURITY_REVIEW.md)
+- [Final Database & Migration Review](file:///docs/FINAL_DATABASE_REVIEW.md)
+- [Final Release Checklist](file:///docs/FINAL_RELEASE_CHECKLIST.md)
 - [System Architecture](file:///docs/architecture/ARCHITECTURE.md)
-- [REST API Reference](file:///docs/api/API.md)
-- [Enterprise Security & Privacy](file:///docs/security/SECURITY.md)
-- [AWS Cloud Deployment Guide](file:///docs/deployment/AWS_DEPLOYMENT.md)
-- [AI Benchmark & Evaluation Guide](file:///evaluation/AI_EVALUATION.md)
+- [AI Benchmark & Evaluation Report](file:///docs/AI_PERFORMANCE_BENCHMARK.md)

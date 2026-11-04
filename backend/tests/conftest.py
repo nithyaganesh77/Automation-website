@@ -1,10 +1,21 @@
+import sys
+import os
+import uuid
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+
+# Ensure backend directory and root are in sys.path
+backend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if backend_dir not in sys.path:
+    sys.path.insert(0, backend_dir)
+root_dir = os.path.abspath(os.path.join(backend_dir, ".."))
+if root_dir not in sys.path:
+    sys.path.insert(0, root_dir)
+
 from app.database.session import Base, get_db
 from app.main import app
-import uuid
 from app.models.all_models import Organization, User, OrganizationMember, OrganizationSetting
 from app.core.security import hash_password, create_access_token
 

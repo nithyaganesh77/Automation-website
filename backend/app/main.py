@@ -23,6 +23,7 @@ from app.api.v1.notifications import router as notifications_router
 from app.api.v1.onboarding import router as onboarding_router
 from app.api.v1.subscriptions import router as subscriptions_router
 from app.api.v1.super_admin import router as super_admin_router
+from app.api.v1.compliance import router as compliance_router
 
 # Initialize FastAPI Application
 app = FastAPI(
@@ -59,6 +60,12 @@ async def prometheus_metrics_and_logging_middleware(request: Request, call_next)
     REQUEST_COUNT.labels(method=request.method, endpoint=endpoint, status=status_code).inc()
     REQUEST_LATENCY.labels(endpoint=endpoint).observe(duration)
     
+    # Security Response Headers
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+
     return response
 
 
@@ -114,6 +121,7 @@ app.include_router(notifications_router, prefix=settings.API_V1_PREFIX)
 app.include_router(onboarding_router, prefix=settings.API_V1_PREFIX)
 app.include_router(subscriptions_router, prefix=settings.API_V1_PREFIX)
 app.include_router(super_admin_router, prefix=settings.API_V1_PREFIX)
+app.include_router(compliance_router, prefix=settings.API_V1_PREFIX)
 
 
 if __name__ == "__main__":

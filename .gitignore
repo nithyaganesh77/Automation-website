@@ -26,7 +26,11 @@ ENV/
 # Database & Environment
 *.db
 *.sqlite3
+*.db-journal
+*.db-wal
+*.db-shm
 .env
+backend/storage/
 storage/uploads/**
 !storage/uploads/.gitkeep
 storage/exports/**

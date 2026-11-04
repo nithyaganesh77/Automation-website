@@ -46,6 +46,7 @@ class Organization(Base):
     settings = relationship("OrganizationSetting", back_populates="organization", uselist=False, cascade="all, delete-orphan")
     subscription = relationship("Subscription", back_populates="organization", uselist=False, cascade="all, delete-orphan")
     invitations = relationship("OrganizationInvitation", back_populates="organization", cascade="all, delete-orphan")
+    data_rights_requests = relationship("DataRightsRequest", back_populates="organization", cascade="all, delete-orphan")
 
 
 class User(Base):
@@ -441,6 +442,11 @@ class OrganizationSetting(Base):
     auto_approve_threshold = Column(Float, default=0.98, nullable=False)
     currency = Column(String(10), default="INR", nullable=False)
     monthly_budget_usd = Column(Float, default=100.0, nullable=False)
+    tenant_disable_external_ai = Column(Boolean, default=False, nullable=False)
+    consent_withdrawn = Column(Boolean, default=False, nullable=False)
+    consent_withdrawn_at = Column(DateTime(timezone=True), nullable=True)
+    retention_policy_days = Column(Integer, default=365, nullable=False)
+    data_rights_contact_email = Column(String(255), nullable=True)
     created_at = Column(DateTime(timezone=True), default=utc_now, nullable=False)
     updated_at = Column(DateTime(timezone=True), default=utc_now, onupdate=utc_now, nullable=False)
 
@@ -486,5 +492,23 @@ class OrganizationInvitation(Base):
 
     organization = relationship("Organization", back_populates="invitations")
     inviter = relationship("User")
+
+
+class DataRightsRequest(Base):
+    __tablename__ = "data_rights_requests"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    organization_id = Column(String(36), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    request_type = Column(String(50), nullable=False, index=True)  # CONSENT_WITHDRAWAL, CONSENT_GRANTED, DATA_EXPORT, DATA_DELETION, RETENTION_UPDATE
+    status = Column(String(50), default="PENDING", nullable=False, index=True)  # PENDING, PROCESSING, COMPLETED, REJECTED
+    details = Column(JSON, default=dict, nullable=False)
+    requested_at = Column(DateTime(timezone=True), default=utc_now, nullable=False)
+    completed_at = Column(DateTime(timezone=True), nullable=True)
+    processed_by = Column(String(36), nullable=True)
+    notes = Column(Text, nullable=True)
+
+    organization = relationship("Organization", back_populates="data_rights_requests")
+    user = relationship("User")
 
 

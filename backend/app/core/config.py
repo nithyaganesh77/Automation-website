@@ -1,7 +1,7 @@
 import os
 from typing import List, Optional
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import Field
+from pydantic import Field, AliasChoices, model_validator
 
 
 class Settings(BaseSettings):
@@ -12,10 +12,23 @@ class Settings(BaseSettings):
     DEBUG: bool = True
 
     # Security & Auth
-    SECRET_KEY: str = Field(default="documind_ai_super_secret_jwt_key_enterprise_2026_change_in_production", validation_alias="SECRET_KEY")
+    SECRET_KEY: str = Field(
+        default="documind_ai_super_secret_jwt_key_enterprise_2026_change_in_production",
+        validation_alias=AliasChoices("SECRET_KEY", "JWT_SECRET_KEY")
+    )
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 24 hours
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30
+
+    @model_validator(mode="after")
+    def validate_production_configuration(self):
+        if self.ENVIRONMENT == "production":
+            if "change_in_production" in self.SECRET_KEY.lower() or len(self.SECRET_KEY) < 32:
+                raise ValueError(
+                    "CRITICAL SECURITY ERROR: Insecure default SECRET_KEY detected in production environment. "
+                    "Generate a cryptographically secure 32+ character random secret (e.g. openssl rand -hex 32) and set SECRET_KEY."
+                )
+        return self
 
     # Database (PostgreSQL with SQLite fallback)
     DATABASE_URL: str = Field(

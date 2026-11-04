@@ -12,7 +12,7 @@ from app.database.session import SessionLocal
 from app.models.all_models import (
     Document, DocumentPage, ExtractedField, Invoice, InvoiceLineItem,
     ValidationResult, DuplicateMatch, AnomalyFinding, AgentExecution,
-    ApprovalRequest, Supplier, Notification
+    ApprovalRequest, Supplier, Notification, OrganizationSetting
 )
 from app.core.logging import logger
 
@@ -138,7 +138,13 @@ def classification_agent_node(state: DocuMindState) -> Dict[str, Any]:
     db = SessionLocal()
     try:
         full_text = state.get("full_text", "")
-        doc_type, confidence, details = LLMService.classify_document(full_text)
+        org_id = state.get("organization_id")
+        tenant_privacy = False
+        if org_id:
+            setting = db.query(OrganizationSetting).filter(OrganizationSetting.organization_id == org_id).first()
+            if setting and (setting.tenant_disable_external_ai or setting.consent_withdrawn):
+                tenant_privacy = True
+        doc_type, confidence, details = LLMService.classify_document(full_text, tenant_privacy_mode=tenant_privacy)
 
         # Update Document record in DB
         doc = db.query(Document).filter(Document.id == doc_id).first()
@@ -176,7 +182,13 @@ def extraction_agent_node(state: DocuMindState) -> Dict[str, Any]:
     db = SessionLocal()
     try:
         full_text = state.get("full_text", "")
-        extracted_data, tokens, cost = LLMService.extract_invoice_data(full_text)
+        org_id = state.get("organization_id")
+        tenant_privacy = False
+        if org_id:
+            setting = db.query(OrganizationSetting).filter(OrganizationSetting.organization_id == org_id).first()
+            if setting and (setting.tenant_disable_external_ai or setting.consent_withdrawn):
+                tenant_privacy = True
+        extracted_data, tokens, cost = LLMService.extract_invoice_data(full_text, tenant_privacy_mode=tenant_privacy)
 
         # Persist extracted fields
         conf_scores = extracted_data.get("confidence_scores", {})

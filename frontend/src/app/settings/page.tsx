@@ -454,7 +454,7 @@ export default function SettingsPage() {
                 <option value="true">Active (Fallback to Local Engine)</option>
                 <option value="false">Off (Retry Until Provider Refuses)</option>
               </select>
-              <span className="text-[10px] text-slate-400 mt-1 block">Guarantees zero unexpected billings</span>
+              <span className="text-[10px] text-slate-400 mt-1 block">Mitigates unexpected costs by enforcing local fallback</span>
             </div>
           </div>
         </div>

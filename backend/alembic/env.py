@@ -18,8 +18,9 @@ from alembic import context
 # access to the values within the .ini file in use.
 config = context.config
 
-# Set sqlalchemy.url from application settings dynamically
-config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
+# Set sqlalchemy.url from application settings dynamically if not already explicitly provided
+if not config.get_main_option("sqlalchemy.url"):
+    config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
 
 # Interpret the config file for Python logging.
 if config.config_file_name is not None:
@@ -70,7 +71,8 @@ def run_migrations_online() -> None:
         poolclass=pool.NullPool,
     )
 
-    is_sqlite = settings.DATABASE_URL.startswith("sqlite")
+    target_url = config.get_main_option("sqlalchemy.url") or settings.DATABASE_URL
+    is_sqlite = target_url.startswith("sqlite")
     with connectable.connect() as connection:
         context.configure(
             connection=connection, 

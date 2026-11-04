@@ -218,3 +218,4 @@ docker exec -it documind-backend alembic history
 | Automated Backups | Daily cron + 30-day rotation | Script template verified |
 | Restore Protocol | Tested `< 5 min` RTO | Playbook documented |
 | Data Integrity Check | Relational integrity & FKs | Zero orphan records enforced |
+

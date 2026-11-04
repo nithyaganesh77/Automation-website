@@ -27,7 +27,7 @@ export default function UploadPage() {
   const [processedDocs, setProcessedDocs] = useState<DocumentDetail[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
-  const [consentAgreed, setConsentAgreed] = useState(true);
+  const [consentAgreed, setConsentAgreed] = useState(false);
 
   const handleFiles = (files: FileList | null) => {
     if (!files) return;
@@ -56,6 +56,10 @@ export default function UploadPage() {
 
   const handleUploadSubmit = async () => {
     if (selectedFiles.length === 0) return;
+    if (!consentAgreed) {
+      setError("Document upload requires explicit customer consent.");
+      return;
+    }
     setUploading(true);
     setError(null);
     setUploadProgress(20);
@@ -67,6 +71,7 @@ export default function UploadPage() {
         const file = selectedFiles[i];
         const formData = new FormData();
         formData.append("file", file);
+        formData.append("customer_consent", "true");
 
         setUploadProgress(Math.round(((i + 0.5) / selectedFiles.length) * 100));
         const res = await api.post<DocumentDetail>("/documents/upload", formData);
@@ -199,7 +204,7 @@ export default function UploadPage() {
                 className="mt-0.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
               />
               <span>
-                I confirm that our organization has authorized the ingestion of these business documents under the DocuMind AI pilot evaluation terms and consent to automated OCR, GST reconciliation, and anomaly analysis.
+                I confirm that our organization has authorized the ingestion of these business documents under the DocuMind AI pilot evaluation terms and explicitly consent to automated OCR extraction, deterministic GST reconciliation, multi-agent AI processing (including external LLM inference via Google Gemini and Groq APIs where active), and anomaly analysis under the Digital Personal Data Protection (DPDP) Act 2023.
               </span>
             </label>
           </div>

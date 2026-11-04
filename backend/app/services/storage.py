@@ -1,4 +1,5 @@
 import os
+import re
 import hashlib
 import uuid
 import io
@@ -81,8 +82,18 @@ class StorageService:
         os.makedirs(org_dir, exist_ok=True)
 
         unique_id = str(uuid.uuid4())
-        safe_filename = f"{unique_id}_{file.filename}"
-        destination_path = os.path.join(org_dir, safe_filename)
+        raw_name = (file.filename or "uploaded_document").replace("\\", "/")
+        raw_basename = os.path.basename(raw_name)
+        sanitized_name = re.sub(r'[^a-zA-Z0-9_.-]', '_', raw_basename)
+        sanitized_name = sanitized_name.lstrip(".")
+        if not sanitized_name:
+            sanitized_name = f"doc_{unique_id}.{ext if ext else 'dat'}"
+        safe_filename = f"{unique_id}_{sanitized_name}"
+        destination_path = os.path.abspath(os.path.join(org_dir, safe_filename))
+
+        # Enforce strict path containment within organization directory
+        if not destination_path.startswith(os.path.abspath(org_dir)):
+            raise HTTPException(status_code=400, detail="Path traversal attempt detected in uploaded filename.")
 
         sha256_hash = hashlib.sha256()
         total_size = 0
@@ -119,4 +130,4 @@ class StorageService:
             except Exception as e:
                 logger.warning(f"Failed to sync to MinIO: {e}")
 
-        return destination_path, file_hash, total_size, file.filename
+        return destination_path, file_hash, total_size, sanitized_name

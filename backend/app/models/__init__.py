@@ -24,6 +24,7 @@ from app.models.all_models import (
     AuditLog,
     Notification,
     OrganizationSetting,
+    DataRightsRequest,
 )
 
 __all__ = [
@@ -52,5 +53,6 @@ __all__ = [
     "AuditLog",
     "Notification",
     "OrganizationSetting",
+    "DataRightsRequest",
 ]
 

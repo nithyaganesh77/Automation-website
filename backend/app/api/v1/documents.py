@@ -20,10 +20,17 @@ router = APIRouter(prefix="/documents", tags=["Documents"])
 @router.post("/upload", response_model=DocumentDetailOut)
 async def upload_document(
     file: UploadFile = File(...),
-    customer_consent: bool = Form(default=True),
+    customer_consent: bool = Form(...),
     auth_ctx: AuthenticatedContext = Depends(get_current_user_context),
     db: Session = Depends(get_db)
 ):
+    # Enforce explicit customer consent before any processing or file persistence
+    if not customer_consent:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Document upload requires explicit customer consent."
+        )
+
     # Enforce commercial subscription usage quota
     can_upload, quota_reason = SubscriptionService.check_upload_quota(db, auth_ctx.organization_id)
     if not can_upload:
@@ -36,11 +43,11 @@ async def upload_document(
         file, auth_ctx.organization_id
     )
 
-    # Create Document record
+    # Create Document record with sanitized safe filename
     doc = Document(
         organization_id=auth_ctx.organization_id,
         user_id=auth_ctx.user.id,
-        file_name=file.filename or safe_name,
+        file_name=safe_name,
         file_path=saved_path,
         file_size=file_size,
         mime_type=file.content_type or "application/octet-stream",
@@ -95,9 +102,16 @@ async def upload_document(
 @router.post("/bulk-upload", response_model=List[DocumentOut])
 async def bulk_upload_documents(
     files: List[UploadFile] = File(...),
+    customer_consent: bool = Form(...),
     auth_ctx: AuthenticatedContext = Depends(get_current_user_context),
     db: Session = Depends(get_db)
 ):
+    if not customer_consent:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Document upload requires explicit customer consent."
+        )
+
     results = []
     for f in files:
         saved_path, file_hash, file_size, safe_name = await StorageService.save_upload_file(
@@ -106,7 +120,7 @@ async def bulk_upload_documents(
         doc = Document(
             organization_id=auth_ctx.organization_id,
             user_id=auth_ctx.user.id,
-            file_name=f.filename or safe_name,
+            file_name=safe_name,
             file_path=saved_path,
             file_size=file_size,
             mime_type=f.content_type or "application/octet-stream",
