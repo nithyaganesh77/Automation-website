@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AppLayout } from "@/components/layout/AppLayout";
 import { api } from "@/lib/api-client";
 import {
   ShieldAlert,
@@ -84,8 +83,7 @@ export default function SuperAdminPage() {
   };
 
   return (
-    <AppLayout>
-      <div className="space-y-8 max-w-7xl mx-auto pb-12">
+    <div className="space-y-8 max-w-7xl mx-auto pb-12">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
@@ -328,7 +326,6 @@ export default function SuperAdminPage() {
           </>
         )}
       </div>
-    </AppLayout>
   );
 }
 

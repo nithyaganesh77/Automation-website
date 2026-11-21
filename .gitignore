@@ -30,6 +30,7 @@ ENV/
 *.db-wal
 *.db-shm
 .env
+.documind_pids.json
 backend/storage/
 storage/uploads/**
 !storage/uploads/.gitkeep

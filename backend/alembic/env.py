@@ -19,7 +19,8 @@ from alembic import context
 config = context.config
 
 # Set sqlalchemy.url from application settings dynamically if not already explicitly provided
-if not config.get_main_option("sqlalchemy.url"):
+current_url = config.get_main_option("sqlalchemy.url")
+if not current_url or "driver://user:pass" in current_url:
     config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
 
 # Interpret the config file for Python logging.

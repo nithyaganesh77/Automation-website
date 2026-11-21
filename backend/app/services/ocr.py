@@ -1,6 +1,7 @@
 import os
 from typing import List, Dict, Any, Tuple
 from app.core.logging import logger
+from app.core.config import settings
 
 try:
     import pymupdf as fitz
@@ -151,17 +152,43 @@ class DocumentParserService:
     @classmethod
     def _parse_image(cls, file_path: str) -> List[ExtractedPageResult]:
         meta = {}
-        if Image:
-            with Image.open(file_path) as img:
-                meta = {"width": img.width, "height": img.height, "format": img.format}
+        extracted_text = ""
+        engine = "image_ocr_engine"
+        confidence = 0.90
 
-        # For images in offline/synthetic mode, we extract text via OCR or metadata
+        if Image:
+            try:
+                with Image.open(file_path) as img:
+                    meta = {"width": img.width, "height": img.height, "format": img.format}
+            except Exception as e:
+                logger.warning(f"Failed to open image with PIL: {e}")
+
+        # Use Gemini Vision for high-accuracy OCR on image files if available and not in privacy mode
+        if not settings.DISABLE_EXTERNAL_AI and settings.GEMINI_API_KEY and Image:
+            try:
+                from google import genai
+                client = genai.Client(api_key=settings.GEMINI_API_KEY)
+                with Image.open(file_path) as img:
+                    res = client.models.generate_content(
+                        model=settings.GEMINI_MODEL,
+                        contents=[img, "Transcribe all visible text from this document/invoice image verbatim, preserving layout, tables, lines, headers, amounts, and numbers."]
+                    )
+                    if res and res.text:
+                        extracted_text = res.text.strip()
+                        engine = "gemini_vision_ocr"
+                        confidence = 0.98
+            except Exception as e:
+                logger.warning(f"Gemini vision OCR extraction failed, falling back: {e}")
+
+        if not extracted_text:
+            extracted_text = f"[Image Document Extracted: {os.path.basename(file_path)}]"
+
         return [
             ExtractedPageResult(
                 page_number=1,
-                text=f"[Image Document Extracted: {os.path.basename(file_path)}]",
-                engine="image_ocr_engine",
-                confidence=0.90,
+                text=extracted_text,
+                engine=engine,
+                confidence=confidence,
                 metadata=meta
             )
         ]

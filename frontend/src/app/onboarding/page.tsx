@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AppLayout } from "@/components/layout/AppLayout";
 import { api } from "@/lib/api-client";
 import {
   Sparkles,
@@ -164,8 +163,7 @@ export default function OnboardingPage() {
   };
 
   return (
-    <AppLayout>
-      <div className="space-y-8 max-w-4xl mx-auto pb-16">
+    <div className="space-y-8 max-w-4xl mx-auto pb-16">
         {/* Banner */}
         <div className="text-center space-y-2">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
@@ -606,7 +604,6 @@ export default function OnboardingPage() {
           </div>
         )}
       </div>
-    </AppLayout>
   );
 }
 
