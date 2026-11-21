@@ -6,8 +6,12 @@
   "compatibility_flags": [
     "nodejs_compat"
   ],
+  "vars": {
+    "NEXT_PUBLIC_API_URL": "https://automation-website-pyp9.onrender.com"
+  },
   "assets": {
     "directory": "./frontend/.next",
     "binding": "ASSETS"
   }
 }
+

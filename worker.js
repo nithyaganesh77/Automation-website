@@ -5,7 +5,7 @@ export default {
 
     // 1. Proxy API requests to backend
     if (pathname.startsWith("/api/v1/")) {
-      const backendUrl = env.NEXT_PUBLIC_API_URL || "https://documind-api.onrender.com";
+      const backendUrl = env.NEXT_PUBLIC_API_URL || "https://automation-website-pyp9.onrender.com";
       const targetUrl = new URL(pathname + url.search, backendUrl);
       return fetch(new Request(targetUrl, request));
     }

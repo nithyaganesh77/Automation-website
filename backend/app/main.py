@@ -77,6 +77,18 @@ def on_startup():
 
 
 # Health Check Endpoints
+@app.get("/", tags=["Health"])
+def root():
+    return {
+        "status": "healthy",
+        "service": settings.PROJECT_NAME,
+        "version": settings.VERSION,
+        "environment": settings.ENVIRONMENT,
+        "docs_url": "/docs",
+        "health_url": "/health"
+    }
+
+
 @app.get("/health", tags=["Health"])
 def health_check():
     db_health = check_db_health()

@@ -94,7 +94,10 @@ class Settings(BaseSettings):
         "http://localhost:3000",
         "http://127.0.0.1:3000",
         "http://localhost:8000",
-        "http://127.0.0.1:8000"
+        "http://127.0.0.1:8000",
+        "https://automation-website.kizuna2026.workers.dev",
+        "https://documind-ai-40w.pages.dev",
+        "https://automation-website-pyp9.onrender.com",
     ]
 
     model_config = SettingsConfigDict(
