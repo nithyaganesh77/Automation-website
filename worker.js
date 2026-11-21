@@ -10,13 +10,25 @@ export default {
       return fetch(new Request(targetUrl, request));
     }
 
-    // 2. Serve static assets directly (_next/static/...)
-    if (pathname.startsWith("/_next/") || pathname.includes(".")) {
-      return env.ASSETS.fetch(request);
+    // 2. Map Next.js static asset URLs (/_next/static/... -> /static/...)
+    if (pathname.startsWith("/_next/static/")) {
+      const assetPath = pathname.replace(/^\/_next\/static\//, "/static/");
+      const assetUrl = new URL(assetPath, url.origin);
+      const assetResp = await env.ASSETS.fetch(assetUrl.toString());
+      if (assetResp.status === 200) {
+        return assetResp;
+      }
     }
 
-    // 3. Clean page routes (e.g. /, /dashboard, /login, /upload, /subscriptions)
-    const pagePath = pathname === "/" ? "/server/app/index.html" : `/server/app${pathname}.html`;
+    // 3. Serve other static assets directly if they have an extension
+    if (pathname.includes(".")) {
+      const resp = await env.ASSETS.fetch(request);
+      if (resp.status === 200) return resp;
+    }
+
+    // 4. Clean page routes (e.g. /, /dashboard, /login, /upload, /subscriptions)
+    const cleanPath = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
+    const pagePath = cleanPath === "/" ? "/server/app/index.html" : `/server/app${cleanPath}.html`;
     const targetUrl = new URL(pagePath, url.origin);
     const pageResponse = await env.ASSETS.fetch(targetUrl.toString());
     if (pageResponse.status === 200) {
@@ -25,7 +37,7 @@ export default {
       return new Response(pageResponse.body, { status: 200, headers });
     }
 
-    // 4. Dynamic route fallback (e.g. /documents/[id])
+    // 5. Dynamic route fallback (e.g. /documents/[id])
     if (pathname.startsWith("/documents/")) {
       const docDetailUrl = new URL("/server/app/documents/[id].html", url.origin);
       const docResp = await env.ASSETS.fetch(docDetailUrl.toString());
@@ -36,7 +48,7 @@ export default {
       }
     }
 
-    // 5. 404 Fallback
+    // 6. 404 Fallback
     const notFoundUrl = new URL("/server/app/_not-found.html", url.origin);
     const notFoundResp = await env.ASSETS.fetch(notFoundUrl.toString());
     return new Response(notFoundResp.body, {
