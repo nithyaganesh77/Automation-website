@@ -58,4 +58,7 @@ htmlcov/
 # OS
 .DS_Store
 Thumbs.db
+*.exe
+scripts/*.exe
+*.log
 
