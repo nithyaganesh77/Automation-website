@@ -1,14 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  output: process.env.NEXT_EXPORT === 'true' ? 'export' : 'standalone',
-  images: {
-    unoptimized: true,
-  },
+  output: 'standalone',
   async rewrites() {
-    if (process.env.NEXT_EXPORT === 'true') {
-      return [];
-    }
     return [
       {
         source: '/api/v1/:path*',
@@ -21,5 +15,7 @@ const nextConfig = {
 };
 
 export default nextConfig;
+
+
 
 
