@@ -1,4 +1,4 @@
-# ==============================================================================
+﻿# ==============================================================================
 # DOCUMIND AI — STARTUP SCRIPT (WINDOWS POWERSHELL)
 # ==============================================================================
 
@@ -30,12 +30,13 @@ $env:PYTHONPATH = "backend"
 $VenvUvicorn = "backend\.venv\Scripts\uvicorn.exe"
 
 Write-Host "Starting FastAPI Backend on http://localhost:8000..." -ForegroundColor Cyan
-$BackendJob = Start-Process -FilePath $VenvUvicorn -ArgumentList "app.main:app --port 8000 --reload" -PassThru -WindowStyle Minimized
+$BackendExe = (Resolve-Path "backend\.venv\Scripts\uvicorn.exe").Path
+$BackendDir = (Resolve-Path "backend").Path
+$BackendJob = Start-Process -FilePath $BackendExe -ArgumentList "app.main:app --port 8000 --reload" -WorkingDirectory $BackendDir -PassThru -WindowStyle Minimized
 
 Write-Host "Starting Next.js Frontend on http://localhost:3000..." -ForegroundColor Cyan
-Push-Location frontend
-$FrontendJob = Start-Process -FilePath "npm.cmd" -ArgumentList "run dev" -PassThru -WindowStyle Minimized
-Pop-Location
+$FrontendDir = (Resolve-Path "frontend").Path
+$FrontendJob = Start-Process -FilePath "npm.cmd" -ArgumentList "run dev" -WorkingDirectory $FrontendDir -PassThru -WindowStyle Minimized
 
 # Save process IDs for clean stop
 $Pids = @{
