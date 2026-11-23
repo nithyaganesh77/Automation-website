@@ -34,7 +34,12 @@ const navigation = [
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 
-export function Sidebar() {
+interface SidebarProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+export function Sidebar({ isOpen = true, onClose }: SidebarProps) {
   const pathname = usePathname();
   const [showStatusCard, setShowStatusCard] = useState(true);
 
@@ -50,18 +55,38 @@ export function Sidebar() {
     localStorage.setItem("documind_hide_status_card", "true");
   };
 
+  if (!isOpen) {
+    return null;
+  }
+
   return (
-    <aside className="w-64 bg-navy-950 text-slate-300 flex flex-col border-r border-navy-800 shrink-0 select-none">
-      {/* Brand Header */}
-      <div className="h-16 flex items-center px-6 gap-3 border-b border-navy-800/80 bg-navy-900/50">
-        <div className="h-9 w-9 rounded-lg bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
-          <ShieldCheck className="h-5 w-5" />
+    <aside className="w-64 bg-navy-950 text-slate-300 flex flex-col border-r border-navy-800 shrink-0 select-none z-30 transition-all duration-200">
+      {/* Brand Header with Close Button */}
+      <div className="h-16 flex items-center justify-between px-5 border-b border-navy-800/80 bg-navy-900/50">
+        <div className="flex items-center gap-2.5">
+          <div className="h-9 w-9 rounded-lg bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
+            <ShieldCheck className="h-5 w-5" />
+          </div>
+          <div>
+            <div className="flex items-center gap-1.5">
+              <span className="font-bold text-white text-base tracking-tight">DocuMind</span>
+              <span className="text-blue-400 font-semibold text-[10px] px-1 py-0.2 rounded bg-blue-500/10 border border-blue-500/20">AI</span>
+            </div>
+            <p className="text-[10px] text-slate-400 font-medium">GST & Invoice Intelligence</p>
+          </div>
         </div>
-        <div>
-          <span className="font-bold text-white text-lg tracking-tight">DocuMind</span>
-          <span className="text-blue-400 font-semibold text-xs ml-1.5 px-1.5 py-0.5 rounded bg-blue-500/10 border border-blue-500/20">AI</span>
-          <p className="text-[10px] text-slate-400 font-medium">GST & Invoice Intelligence</p>
-        </div>
+
+        {/* Close Button */}
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="p-1.5 text-slate-400 hover:text-white hover:bg-navy-800 rounded-lg transition-colors"
+            title="Close Sidebar"
+            aria-label="Close Sidebar"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        )}
       </div>
 
       {/* Nav Menu */}

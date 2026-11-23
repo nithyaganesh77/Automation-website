@@ -2,11 +2,16 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Bell, LogOut, User as UserIcon, Building, ShieldAlert, Check } from "lucide-react";
+import { Bell, LogOut, User as UserIcon, Building, ShieldAlert, Check, Menu } from "lucide-react";
 import { api } from "@/lib/api-client";
 import { User } from "@/types";
 
-export function Navbar() {
+interface NavbarProps {
+  sidebarOpen?: boolean;
+  onToggleSidebar?: () => void;
+}
+
+export function Navbar({ sidebarOpen = true, onToggleSidebar }: NavbarProps) {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -44,9 +49,20 @@ export function Navbar() {
   };
 
   return (
-    <header className="h-16 bg-white border-b border-slate-200 px-8 flex items-center justify-between shrink-0 shadow-sm z-20">
-      {/* Organization Badge */}
+    <header className="h-16 bg-white border-b border-slate-200 px-6 sm:px-8 flex items-center justify-between shrink-0 shadow-sm z-20">
+      {/* Organization Badge & Menu Toggle */}
       <div className="flex items-center gap-3">
+        {!sidebarOpen && onToggleSidebar && (
+          <button
+            onClick={onToggleSidebar}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-sm transition-all mr-1"
+            title="Open Workspace Menu"
+          >
+            <Menu className="h-4 w-4 text-blue-600" />
+            <span className="hidden sm:inline">Open Menu</span>
+          </button>
+        )}
+
         <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-700">
           <Building className="h-3.5 w-3.5 text-blue-600" />
           <span>{user?.organization?.name || "DocuMind Enterprise"}</span>
