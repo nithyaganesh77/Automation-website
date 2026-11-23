@@ -1,3 +1,4 @@
+import uuid
 import bcrypt
 import jwt
 from datetime import datetime, timedelta, timezone
@@ -40,6 +41,7 @@ def create_access_token(
         "org_id": str(organization_id),
         "role": role,
         "type": "access",
+        "jti": str(uuid.uuid4()),
         "exp": expire,
         "iat": datetime.now(timezone.utc)
     }
@@ -47,13 +49,36 @@ def create_access_token(
     return encoded_jwt
 
 
-def create_refresh_token(subject: Union[str, Any], organization_id: str) -> str:
-    """Generate JWT refresh token."""
+def create_refresh_token(subject: Union[str, Any], organization_id: str, jti: Optional[str] = None) -> str:
+    """Generate JWT refresh token with unique jti for rotation tracking."""
     expire = datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
     to_encode: Dict[str, Any] = {
         "sub": str(subject),
         "org_id": str(organization_id),
         "type": "refresh",
+        "jti": jti or str(uuid.uuid4()),
+        "exp": expire,
+        "iat": datetime.now(timezone.utc)
+    }
+    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+    return encoded_jwt
+
+
+def create_download_token(
+    export_id: str,
+    organization_id: str,
+    user_id: str,
+    expires_seconds: int = 60,
+    jti: Optional[str] = None
+) -> str:
+    """Generate a short-lived (60s) single-use cryptographically signed token for file export downloads."""
+    expire = datetime.now(timezone.utc) + timedelta(seconds=expires_seconds)
+    to_encode: Dict[str, Any] = {
+        "sub": str(user_id),
+        "org_id": str(organization_id),
+        "export_id": str(export_id),
+        "type": "download_token",
+        "jti": jti or str(uuid.uuid4()),
         "exp": expire,
         "iat": datetime.now(timezone.utc)
     }

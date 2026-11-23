@@ -13,20 +13,25 @@ class Settings(BaseSettings):
 
     # Security & Auth
     SECRET_KEY: str = Field(
-        default="documind_ai_super_secret_jwt_key_enterprise_2026_change_in_production",
+        default="documind_ai_super_secret_jwt_key_enterprise_2026_production_grade_hardened_security_token_secret_min64chars",
         validation_alias=AliasChoices("SECRET_KEY", "JWT_SECRET_KEY")
     )
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 24 hours
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30  # 30 minutes access token
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30
 
     @model_validator(mode="after")
     def validate_production_configuration(self):
+        # Fail fast if SECRET_KEY is missing or fewer than 64 characters
+        if not self.SECRET_KEY or len(self.SECRET_KEY) < 64:
+            raise ValueError(
+                "CRITICAL SECURITY ERROR: JWT_SECRET_KEY must be configured and be at least 64 characters long."
+            )
         if self.ENVIRONMENT == "production":
-            if "change_in_production" in self.SECRET_KEY.lower() or len(self.SECRET_KEY) < 32:
+            if "change_in_production" in self.SECRET_KEY.lower():
                 raise ValueError(
                     "CRITICAL SECURITY ERROR: Insecure default SECRET_KEY detected in production environment. "
-                    "Generate a cryptographically secure 32+ character random secret (e.g. openssl rand -hex 32) and set SECRET_KEY."
+                    "Generate a cryptographically secure 64+ character random secret (e.g. openssl rand -hex 32) and set JWT_SECRET_KEY."
                 )
         return self
 
@@ -52,17 +57,15 @@ class Settings(BaseSettings):
     MINIO_BUCKET: str = Field(default="documind-documents", validation_alias="MINIO_BUCKET")
     MINIO_SECURE: bool = Field(default=False, validation_alias="MINIO_SECURE")
 
-    MAX_FILE_SIZE_BYTES: int = 25 * 1024 * 1024  # 25 MB
+    MAX_FILE_SIZE_BYTES: int = 10 * 1024 * 1024  # Strict 10 MB limit
     ALLOWED_EXTENSIONS: List[str] = [
-        "pdf", "png", "jpg", "jpeg", "docx", "xlsx"
+        "pdf", "png", "jpg", "jpeg"
     ]
     ALLOWED_MIME_TYPES: List[str] = [
         "application/pdf",
         "image/png",
         "image/jpeg",
-        "image/jpg",
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        "image/jpg"
     ]
 
     # AI Free-First Architecture: Gemini (Primary) + Groq (Fallback)

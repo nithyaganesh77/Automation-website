@@ -24,6 +24,9 @@ from app.api.v1.onboarding import router as onboarding_router
 from app.api.v1.subscriptions import router as subscriptions_router
 from app.api.v1.super_admin import router as super_admin_router
 from app.api.v1.compliance import router as compliance_router
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from app.core.rate_limit import limiter
 
 # Initialize FastAPI Application
 app = FastAPI(
@@ -33,6 +36,10 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc"
 )
+
+# Register Slowapi Rate Limiter
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # CORS Configuration
 app.add_middleware(

@@ -7,6 +7,7 @@ from app.core.security import decode_token
 from app.models.all_models import User, OrganizationMember, Organization
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
+oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", auto_error=False)
 
 
 class AuthenticatedContext:
@@ -55,6 +56,37 @@ def get_current_user_context(
     
     effective_role = member.role if member else ("Admin" if user.is_superuser else role)
     return AuthenticatedContext(user=user, organization_id=org_id, role=effective_role)
+
+
+def get_optional_user_context(
+    token: Optional[str] = Depends(oauth2_scheme_optional),
+    db: Session = Depends(get_db)
+) -> Optional[AuthenticatedContext]:
+    """Extract authenticated context if Bearer token is provided, or return None."""
+    if not token:
+        return None
+    try:
+        payload = decode_token(token)
+        if not payload or payload.get("type") != "access":
+            return None
+        user_id = payload.get("sub")
+        org_id = payload.get("org_id")
+        role = payload.get("role", "Viewer")
+        if not user_id or not org_id:
+            return None
+        user = db.query(User).filter(User.id == user_id, User.is_active == True).first()
+        if not user:
+            return None
+        member = db.query(OrganizationMember).filter(
+            OrganizationMember.user_id == user_id,
+            OrganizationMember.organization_id == org_id
+        ).first()
+        if not member and not user.is_superuser:
+            return None
+        effective_role = member.role if member else ("Admin" if user.is_superuser else role)
+        return AuthenticatedContext(user=user, organization_id=org_id, role=effective_role)
+    except Exception:
+        return None
 
 
 def require_roles(allowed_roles: List[str]):

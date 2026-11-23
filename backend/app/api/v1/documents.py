@@ -1,6 +1,6 @@
 import os
 from typing import Optional, List
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Query, status
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Query, status, Request
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, desc
@@ -13,12 +13,16 @@ from app.agents.graph import execute_document_workflow
 from app.agents.state import DocuMindState
 from app.services.audit_service import AuditService
 from app.services.subscription_service import SubscriptionService
+from app.core.rate_limit import limiter, get_user_or_ip
+from app.core.config import settings
 
 router = APIRouter(prefix="/documents", tags=["Documents"])
 
 
 @router.post("/upload", response_model=DocumentDetailOut)
+@limiter.limit("30/minute", key_func=get_user_or_ip)
 async def upload_document(
+    request: Request,
     file: UploadFile = File(...),
     customer_consent: bool = Form(...),
     auth_ctx: AuthenticatedContext = Depends(get_current_user_context),
@@ -100,7 +104,9 @@ async def upload_document(
 
 
 @router.post("/bulk-upload", response_model=List[DocumentOut])
+@limiter.limit("30/minute", key_func=get_user_or_ip)
 async def bulk_upload_documents(
+    request: Request,
     files: List[UploadFile] = File(...),
     customer_consent: bool = Form(...),
     auth_ctx: AuthenticatedContext = Depends(get_current_user_context),
@@ -336,6 +342,12 @@ def download_document(
 
     if not doc or not os.path.exists(doc.file_path):
         raise HTTPException(status_code=404, detail="Document file not found on disk")
+
+    # Enforce strict path containment to prevent local file inclusion (LFI)
+    allowed_dir = os.path.abspath(settings.UPLOAD_DIR)
+    file_real_path = os.path.abspath(doc.file_path)
+    if not file_real_path.startswith(allowed_dir):
+        raise HTTPException(status_code=403, detail="Access denied: invalid storage path.")
 
     return FileResponse(
         path=doc.file_path,

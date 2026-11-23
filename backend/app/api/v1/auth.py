@@ -1,7 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+import time
+from datetime import datetime, timezone
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from app.database.session import get_db
-from app.models.all_models import User, Organization, OrganizationMember, OrganizationSetting
+from app.models.all_models import User, Organization, OrganizationMember, OrganizationSetting, RevokedToken
 from app.schemas.auth import (
     UserRegisterRequest, UserLoginRequest, TokenResponse,
     RefreshTokenRequest, ForgotPasswordRequest, UserOut
@@ -9,12 +11,14 @@ from app.schemas.auth import (
 from app.core.security import hash_password, verify_password, create_access_token, create_refresh_token, decode_token
 from app.api.deps import AuthenticatedContext, get_current_user_context
 from app.services.audit_service import AuditService
+from app.core.rate_limit import limiter
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 
 @router.post("/register", response_model=TokenResponse)
-def register_user(req: UserRegisterRequest, db: Session = Depends(get_db)):
+@limiter.limit("3/hour")
+def register_user(request: Request, req: UserRegisterRequest, db: Session = Depends(get_db)):
     # Check if email is already taken
     existing_user = db.query(User).filter(User.email == req.email.lower()).first()
     if existing_user:
@@ -96,9 +100,12 @@ def register_user(req: UserRegisterRequest, db: Session = Depends(get_db)):
 
 
 @router.post("/login", response_model=TokenResponse)
-def login_user(req: UserLoginRequest, db: Session = Depends(get_db)):
+@limiter.limit("5/15minute")
+def login_user(request: Request, req: UserLoginRequest, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == req.email.lower()).first()
     if not user or not verify_password(req.password, user.hashed_password):
+        # 1-second progressive delay on failed attempts to mitigate brute-force
+        time.sleep(1)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password."
@@ -158,6 +165,20 @@ def refresh_token(req: RefreshTokenRequest, db: Session = Depends(get_db)):
             detail="Invalid or expired refresh token."
         )
 
+    # Enforce Refresh Token Rotation (RTR)
+    jti = payload.get("jti")
+    if jti:
+        revoked = db.query(RevokedToken).filter(RevokedToken.jti == jti).first()
+        if revoked:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Refresh token has already been used or revoked."
+            )
+        # Mark current jti as revoked
+        exp_ts = payload.get("exp")
+        exp_dt = datetime.fromtimestamp(exp_ts, tz=timezone.utc) if exp_ts else None
+        db.add(RevokedToken(jti=jti, token_type="refresh", expires_at=exp_dt))
+
     user_id = payload.get("sub")
     org_id = payload.get("org_id")
     user = db.query(User).filter(User.id == user_id, User.is_active == True).first()
@@ -174,6 +195,8 @@ def refresh_token(req: RefreshTokenRequest, db: Session = Depends(get_db)):
     org = db.query(Organization).filter(Organization.id == org_id).first()
     access_token = create_access_token(user.id, org_id, member.role)
     new_refresh = create_refresh_token(user.id, org_id)
+
+    db.commit()
 
     user_out = UserOut(
         id=user.id,

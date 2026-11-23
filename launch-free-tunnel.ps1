@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     DocuMind AI — 100% Free Instant Public Launch Tunnel
     Generates a secure public HTTPS link (https://xxx.trycloudflare.com)

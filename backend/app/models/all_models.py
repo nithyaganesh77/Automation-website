@@ -512,3 +512,14 @@ class DataRightsRequest(Base):
     user = relationship("User")
 
 
+class RevokedToken(Base):
+    __tablename__ = "revoked_tokens"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    jti = Column(String(64), unique=True, nullable=False, index=True)
+    token_type = Column(String(32), default="refresh", nullable=False)  # "refresh", "download_token", etc.
+    expires_at = Column(DateTime(timezone=True), nullable=True)
+    revoked_at = Column(DateTime(timezone=True), default=utc_now, nullable=False)
+
+
+

@@ -8,14 +8,16 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func, desc
 from app.database.session import get_db
 from app.models.all_models import (
-    Document, Invoice, DuplicateMatch, ValidationResult, Supplier, ExportRecord, AuditLog
+    Document, Invoice, DuplicateMatch, ValidationResult, Supplier, ExportRecord, AuditLog, RevokedToken
 )
 from app.schemas.report import (
     DashboardMetricsOut, ExpenseTrendItem, SupplierSpendItem, ExportRequest, ExportRecordOut
 )
-from app.api.deps import AuthenticatedContext, get_current_user_context
+from app.api.deps import AuthenticatedContext, get_current_user_context, get_optional_user_context
 from app.services.export_engine import ExportEngine
 from app.services.audit_service import AuditService
+from app.core.security import create_download_token, decode_token
+from app.core.config import settings
 
 router = APIRouter(prefix="/reports", tags=["Reports & Analytics"])
 
@@ -245,19 +247,98 @@ def create_export(
     return export_rec
 
 
-@router.get("/exports/{export_id}/download")
-def download_export_file(
+@router.post("/exports/{export_id}/token")
+def create_export_download_token(
     export_id: str,
     auth_ctx: AuthenticatedContext = Depends(get_current_user_context),
     db: Session = Depends(get_db)
 ):
+    """
+    Issue a short-lived (60-second) single-use cryptographically signed download token
+    for secure CSV/Excel export downloads.
+    """
     rec = db.query(ExportRecord).filter(
         ExportRecord.id == export_id,
         ExportRecord.organization_id == auth_ctx.organization_id
     ).first()
+    if not rec:
+        raise HTTPException(status_code=404, detail="Export record not found.")
+
+    token = create_download_token(
+        export_id=export_id,
+        organization_id=auth_ctx.organization_id,
+        user_id=auth_ctx.user.id,
+        expires_seconds=60
+    )
+    return {
+        "download_token": token,
+        "expires_in": 60,
+        "download_url": f"/api/v1/reports/exports/{export_id}/download?token={token}"
+    }
+
+
+@router.get("/exports/{export_id}/download")
+def download_export_file(
+    export_id: str,
+    token: Optional[str] = Query(None),
+    auth_ctx: Optional[AuthenticatedContext] = Depends(get_optional_user_context),
+    db: Session = Depends(get_db)
+):
+    """
+    Download export file with either a 60-second single-use signed token or Bearer authorization.
+    Tokens are strictly one-time use (burned upon consumption).
+    """
+    target_org_id = None
+
+    if token:
+        payload = decode_token(token)
+        if not payload or payload.get("type") != "download_token":
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid or expired download token."
+            )
+        if payload.get("export_id") != export_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Download token does not match requested export."
+            )
+        
+        # Enforce single-use token consumption via JTI revocation
+        jti = payload.get("jti")
+        if jti:
+            revoked = db.query(RevokedToken).filter(RevokedToken.jti == jti).first()
+            if revoked:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Download token has already been consumed or revoked."
+                )
+            exp_ts = payload.get("exp")
+            exp_dt = datetime.fromtimestamp(exp_ts, tz=timezone.utc) if exp_ts else None
+            db.add(RevokedToken(jti=jti, token_type="download_token", expires_at=exp_dt))
+            db.commit()
+
+        target_org_id = payload.get("org_id")
+    elif auth_ctx:
+        target_org_id = auth_ctx.organization_id
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required. Provide a valid Bearer token or signed download token."
+        )
+
+    rec = db.query(ExportRecord).filter(
+        ExportRecord.id == export_id,
+        ExportRecord.organization_id == target_org_id
+    ).first()
 
     if not rec or not os.path.exists(rec.file_path):
-        raise HTTPException(status_code=404, detail="Export file not found")
+        raise HTTPException(status_code=404, detail="Export file not found.")
+
+    # Prevent local file inclusion (LFI) & path traversal
+    file_real_path = os.path.abspath(rec.file_path)
+    allowed_storage = os.path.abspath("storage")
+    if not file_real_path.startswith(allowed_storage):
+        raise HTTPException(status_code=403, detail="Access denied: invalid storage path.")
 
     filename = os.path.basename(rec.file_path)
     media_type = "text/csv" if rec.format == "CSV" else "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
