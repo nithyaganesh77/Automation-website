@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -8,32 +9,46 @@ import {
   FileText,
   CheckCircle2,
   Building2,
-  Cpu,
+  ShieldCheck,
   BarChart3,
   Settings,
-  ShieldCheck,
   CreditCard,
   Sparkles,
   ShieldAlert,
+  X,
+  FileCheck2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Upload Documents", href: "/upload", icon: UploadCloud },
-  { name: "Documents", href: "/documents", icon: FileText },
-  { name: "Approval Center", href: "/approvals", icon: CheckCircle2 },
-  { name: "Suppliers", href: "/suppliers", icon: Building2 },
-  { name: "AI Agent Monitor", href: "/agents", icon: Cpu },
-  { name: "Reports & Analytics", href: "/reports", icon: BarChart3 },
-  { name: "Subscription & Plans", href: "/subscriptions", icon: CreditCard },
-  { name: "Onboarding Wizard", href: "/onboarding", icon: Sparkles },
-  { name: "Platform Admin", href: "/admin", icon: ShieldAlert },
+  { name: "Upload Invoices", href: "/upload", icon: UploadCloud },
+  { name: "Invoices & Bills", href: "/documents", icon: FileText },
+  { name: "Tax & Bill Approvals", href: "/approvals", icon: CheckCircle2 },
+  { name: "Vendors & Suppliers", href: "/suppliers", icon: Building2 },
+  { name: "GST & Tax Audit", href: "/agents", icon: FileCheck2 },
+  { name: "GST & Tax Reports", href: "/reports", icon: BarChart3 },
+  { name: "Subscription & Billing", href: "/subscriptions", icon: CreditCard },
+  { name: "Quick Setup Guide", href: "/onboarding", icon: Sparkles },
+  { name: "Company Admin", href: "/admin", icon: ShieldAlert },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
+  const [showStatusCard, setShowStatusCard] = useState(true);
+
+  useEffect(() => {
+    const isDismissed = localStorage.getItem("documind_hide_status_card") === "true";
+    if (isDismissed) {
+      setShowStatusCard(false);
+    }
+  }, []);
+
+  const handleDismiss = () => {
+    setShowStatusCard(false);
+    localStorage.setItem("documind_hide_status_card", "true");
+  };
 
   return (
     <aside className="w-64 bg-navy-950 text-slate-300 flex flex-col border-r border-navy-800 shrink-0 select-none">
@@ -45,7 +60,7 @@ export function Sidebar() {
         <div>
           <span className="font-bold text-white text-lg tracking-tight">DocuMind</span>
           <span className="text-blue-400 font-semibold text-xs ml-1.5 px-1.5 py-0.5 rounded bg-blue-500/10 border border-blue-500/20">AI</span>
-          <p className="text-[10px] text-slate-400 font-medium">Enterprise Intelligence</p>
+          <p className="text-[10px] text-slate-400 font-medium">GST & Invoice Intelligence</p>
         </div>
       </div>
 
@@ -74,19 +89,26 @@ export function Sidebar() {
         })}
       </div>
 
-      {/* System Status Card */}
-      <div className="p-4 border-t border-navy-800/80 m-3 bg-navy-900/40 rounded-xl">
-        <div className="flex items-center justify-between text-xs mb-2">
-          <span className="text-slate-400 font-medium">LangGraph Engine</span>
-          <span className="flex items-center gap-1.5 text-emerald-400 font-semibold">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            9 Agents Live
-          </span>
+      {/* GST & Tax Compliance Status Card with Close Button */}
+      {showStatusCard && (
+        <div className="relative p-3.5 border border-navy-800 m-3 bg-navy-900/60 rounded-xl transition-all shadow-sm">
+          <button
+            onClick={handleDismiss}
+            className="absolute top-2.5 right-2.5 p-1 text-slate-400 hover:text-white hover:bg-navy-800 rounded-md transition-colors"
+            title="Close this card"
+            aria-label="Close this card"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+          <div className="flex items-center gap-1.5 text-xs mb-1.5 pr-6">
+            <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+            <span className="font-semibold text-emerald-400">GST & Tax Guard Active</span>
+          </div>
+          <p className="text-[11px] text-slate-300 leading-relaxed pr-2">
+            Automated tax calculation, GSTIN verification & duplicate bill checks active.
+          </p>
         </div>
-        <p className="text-[11px] text-slate-400 leading-relaxed">
-          Deterministic math validation & human-in-the-loop active.
-        </p>
-      </div>
+      )}
     </aside>
   );
 }

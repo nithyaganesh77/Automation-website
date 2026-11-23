@@ -96,9 +96,9 @@ export default function DashboardPage() {
       {/* Top Banner & Quick Action */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/80 pb-5">
         <div>
-          <h1 className="text-2xl font-bold text-navy-900 tracking-tight">Executive Intelligence Dashboard</h1>
+          <h1 className="text-2xl font-bold text-navy-900 tracking-tight">Invoice & Tax Accounting Dashboard</h1>
           <p className="text-sm text-slate-500 mt-0.5">
-            Real-time financial ingestion metrics, deterministic validation, and agent telemetry.
+            Real-time bill tracking, GST verification, approval workflows, and expenditure overview.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -269,15 +269,15 @@ export default function DashboardPage() {
               <Cpu className="h-5 w-5" />
             </div>
             <div>
-              <h2 className="text-sm font-bold tracking-tight">Active Multi-Agent Orchestration Nodes</h2>
-              <p className="text-xs text-slate-400">9 Specialized LangGraph agents executing autonomous pipeline</p>
+              <h2 className="text-sm font-bold tracking-tight">Automated Invoice & Tax Audit Pipeline</h2>
+              <p className="text-xs text-slate-400">9 automated compliance checks verifying GSTIN, line-item tax rates & duplicate bills</p>
             </div>
           </div>
           <Link
             href="/agents"
             className="text-xs font-semibold text-blue-400 hover:text-blue-300 flex items-center gap-1"
           >
-            Inspect Execution Traces <ArrowRight className="h-3 w-3" />
+            View Verification Steps <ArrowRight className="h-3 w-3" />
           </Link>
         </div>
 

@@ -182,7 +182,7 @@ export default function UploadPage() {
           {uploading && (
             <div className="space-y-2 pt-2">
               <div className="flex justify-between text-xs font-semibold text-slate-600">
-                <span>Executing LangGraph Multi-Agent Pipeline...</span>
+                <span>Extracting Bill Data & Verifying GST Tax Math...</span>
                 <span>{uploadProgress}%</span>
               </div>
               <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
@@ -204,7 +204,7 @@ export default function UploadPage() {
                 className="mt-0.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
               />
               <span>
-                I confirm that our organization has authorized the ingestion of these business documents under the DocuMind AI pilot evaluation terms and explicitly consent to automated OCR extraction, deterministic GST reconciliation, multi-agent AI processing (including external LLM inference via Google Gemini and Groq APIs where active), and anomaly analysis under the Digital Personal Data Protection (DPDP) Act 2023.
+                I confirm that our organization authorizes processing these business invoices for automated text extraction, GST tax calculation, duplicate bill protection, and audit compliance under the Digital Personal Data Protection (DPDP) Act 2023.
               </span>
             </label>
           </div>
@@ -273,9 +273,9 @@ export default function UploadPage() {
           <div className="h-8 w-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center mb-2.5">
             <ShieldCheck className="h-4 w-4" />
           </div>
-          <h2 className="text-xs font-bold text-navy-900">Deterministic Checks</h2>
+          <h2 className="text-xs font-bold text-navy-900">100% Exact Tax Math</h2>
           <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
-            Mathematical reconciliations for GST, line items, and totals run via strict decimal formulas.
+            Exact mathematical checks for CGST, SGST, IGST, cess, and line-item totals ensure zero invoice calculation errors.
           </p>
         </div>
 
@@ -283,9 +283,9 @@ export default function UploadPage() {
           <div className="h-8 w-8 rounded-lg bg-cyan-50 text-cyan-600 flex items-center justify-center mb-2.5">
             <FileCheck className="h-4 w-4" />
           </div>
-          <h2 className="text-xs font-bold text-navy-900">Cryptographic Deduplication</h2>
+          <h2 className="text-xs font-bold text-navy-900">Duplicate Bill Protection</h2>
           <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
-            Exact SHA-256 hashes and fuzzy date/amount similarity checks prevent accidental double pay.
+            Automatic detection of duplicate vendor bills and invoice numbers prevents accidental double payment.
           </p>
         </div>
 
@@ -293,9 +293,9 @@ export default function UploadPage() {
           <div className="h-8 w-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center mb-2.5">
             <CheckCircle2 className="h-4 w-4" />
           </div>
-          <h2 className="text-xs font-bold text-navy-900">Zero Silent Approvals</h2>
+          <h2 className="text-xs font-bold text-navy-900">Zero Silent Errors & Review</h2>
           <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
-            Discrepancies automatically halt automated export and route to human reviewer verification.
+            Any bill with mismatched tax numbers, math discrepancies, or price anomalies is held for your team's review.
           </p>
         </div>
       </div>

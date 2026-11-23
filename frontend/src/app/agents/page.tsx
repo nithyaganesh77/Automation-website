@@ -53,9 +53,9 @@ export default function AgentsMonitoringPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/80 pb-5">
         <div>
-          <h1 className="text-2xl font-bold text-navy-900 tracking-tight">AI Multi-Agent Telemetry & Health</h1>
+          <h1 className="text-2xl font-bold text-navy-900 tracking-tight">Automated Tax Verification Pipeline</h1>
           <p className="text-sm text-slate-500 mt-0.5">
-            Operational observability, execution latencies, and input/output traces for all 9 LangGraph agents.
+            Live status, verification speed, and audit activity for all 9 automated invoice compliance checks.
           </p>
         </div>
         <button
@@ -63,7 +63,7 @@ export default function AgentsMonitoringPage() {
           className="flex items-center gap-2 px-3.5 py-2 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 shadow-sm"
         >
           <RefreshCw className="h-3.5 w-3.5" />
-          Refresh Telemetry
+          Refresh Status
         </button>
       </div>
 
