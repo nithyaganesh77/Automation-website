@@ -73,6 +73,83 @@ async def prometheus_metrics_and_logging_middleware(request: Request, call_next)
 def on_startup():
     logger.info("Initializing DocuMind AI database tables...")
     Base.metadata.create_all(bind=engine)
+    
+    # Auto-seed default Admin and Reviewer if missing (ensures survival across container restarts)
+    try:
+        from app.database.session import SessionLocal
+        from app.models.all_models import User, Organization, OrganizationMember, OrganizationSetting
+        from app.core.security import hash_password
+
+        db = SessionLocal()
+        try:
+            admin = db.query(User).filter(User.email == "admin@documind.ai").first()
+            if not admin:
+                org = db.query(Organization).filter(Organization.slug == "documind-hq").first()
+                if not org:
+                    org = Organization(
+                        name="DocuMind HQ",
+                        slug="documind-hq",
+                        legal_name="DocuMind Technologies Private Limited",
+                        gstin="29AAAAA0000A1Z5",
+                        onboarding_completed=True,
+                        onboarding_step="COMPLETE"
+                    )
+                    db.add(org)
+                    db.flush()
+                    org_setting = OrganizationSetting(
+                        organization_id=org.id,
+                        ai_provider="gemini",
+                        currency="INR"
+                    )
+                    db.add(org_setting)
+
+                admin = User(
+                    email="admin@documind.ai",
+                    hashed_password=hash_password("Password123!"),
+                    full_name="Alex Mercer (Chief Admin)",
+                    is_active=True,
+                    is_superuser=True
+                )
+                db.add(admin)
+                db.flush()
+
+                member = OrganizationMember(
+                    organization_id=org.id,
+                    user_id=admin.id,
+                    role="Admin"
+                )
+                db.add(member)
+
+            reviewer = db.query(User).filter(User.email == "reviewer@documind.ai").first()
+            if not reviewer:
+                org = db.query(Organization).filter(Organization.slug == "documind-hq").first()
+                if org:
+                    reviewer = User(
+                        email="reviewer@documind.ai",
+                        hashed_password=hash_password("Password123!"),
+                        full_name="Sarah Jenkins (Financial Reviewer)",
+                        is_active=True,
+                        is_superuser=False
+                    )
+                    db.add(reviewer)
+                    db.flush()
+                    member = OrganizationMember(
+                        organization_id=org.id,
+                        user_id=reviewer.id,
+                        role="Reviewer"
+                    )
+                    db.add(member)
+
+            db.commit()
+            logger.info("Admin and Reviewer default accounts verified.")
+        except Exception as seed_err:
+            db.rollback()
+            logger.error(f"Error seeding accounts on startup: {seed_err}")
+        finally:
+            db.close()
+    except Exception as e:
+        logger.error(f"Startup seeding error: {e}")
+
     logger.info("DocuMind AI application startup complete.")
 
 
