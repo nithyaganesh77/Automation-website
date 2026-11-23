@@ -95,8 +95,12 @@ class Settings(BaseSettings):
         "http://127.0.0.1:3000",
         "http://localhost:8000",
         "http://127.0.0.1:8000",
+        "https://documind.kizuna2026.workers.dev",
+        "https://documind-ai.kizuna2026.workers.dev",
+        "https://documind-platform.kizuna2026.workers.dev",
         "https://automation-website.kizuna2026.workers.dev",
         "https://documind-ai-40w.pages.dev",
+        "https://documind-platform.pages.dev",
         "https://automation-website-pyp9.onrender.com",
     ]
 
