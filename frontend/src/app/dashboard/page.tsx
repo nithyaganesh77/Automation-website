@@ -104,17 +104,18 @@ export default function DashboardPage() {
         <div className="flex items-center gap-3">
           <button
             onClick={fetchDashboardData}
-            className="flex items-center gap-2 px-3.5 py-2 rounded-lg border border-slate-200 bg-white text-xs font-medium text-slate-600 hover:bg-slate-50 transition-colors shadow-sm"
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-300 active:scale-95 transition-all duration-200 shadow-sm group"
           >
-            <RefreshCw className="h-3.5 w-3.5" />
-            Refresh
+            <RefreshCw className="h-3.5 w-3.5 text-slate-500 group-hover:rotate-180 transition-transform duration-500" />
+            <span>Refresh</span>
           </button>
           <Link
             href="/upload"
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-sm shadow-blue-600/30 transition-all"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-semibold shadow-md shadow-blue-500/25 hover:shadow-lg hover:shadow-blue-500/35 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 transition-all duration-200 group relative overflow-hidden"
           >
-            Upload Invoices
-            <ArrowRight className="h-3.5 w-3.5" />
+            <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+            <span>+ Upload Invoices</span>
+            <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1 duration-200" />
           </Link>
         </div>
       </div>
@@ -122,7 +123,7 @@ export default function DashboardPage() {
       {/* KPI Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Value */}
-        <div className="p-5 bg-white rounded-xl border border-slate-200/80 shadow-sm flex items-start justify-between">
+        <div className="p-5 bg-white rounded-2xl border border-slate-200/90 shadow-sm flex items-start justify-between card-interactive group">
           <div>
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Invoice Volume</p>
             <p className="text-2xl font-bold text-navy-900 mt-2">
@@ -133,13 +134,13 @@ export default function DashboardPage() {
               Verified Invoices
             </span>
           </div>
-          <div className="p-2.5 rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
+          <div className="p-3 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 text-blue-600 border border-blue-100 group-hover:scale-110 group-hover:shadow-md transition-all duration-200">
             <IndianRupee className="h-5 w-5" />
           </div>
         </div>
 
         {/* Processed Documents */}
-        <div className="p-5 bg-white rounded-xl border border-slate-200/80 shadow-sm flex items-start justify-between">
+        <div className="p-5 bg-white rounded-2xl border border-slate-200/90 shadow-sm flex items-start justify-between card-interactive group">
           <div>
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Documents Ingested</p>
             <p className="text-2xl font-bold text-navy-900 mt-2">{metrics.total_documents}</p>
@@ -147,30 +148,30 @@ export default function DashboardPage() {
               {metrics.processed_documents} successfully processed
             </span>
           </div>
-          <div className="p-2.5 rounded-xl bg-slate-100 text-slate-700 border border-slate-200">
-            <FileText className="h-5 w-5" />
+          <div className="p-3 rounded-xl bg-slate-50 text-slate-700 border border-slate-200 group-hover:scale-110 group-hover:shadow-md transition-all duration-200">
+            <FileText className="h-5 w-5 text-indigo-600" />
           </div>
         </div>
 
         {/* Pending Approvals */}
-        <div className="p-5 bg-white rounded-xl border border-slate-200/80 shadow-sm flex items-start justify-between">
+        <div className="p-5 bg-white rounded-2xl border border-slate-200/90 shadow-sm flex items-start justify-between card-interactive group">
           <div>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Pending Human Review</p>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Pending Tax Approvals</p>
             <p className="text-2xl font-bold text-amber-600 mt-2">{metrics.pending_approvals}</p>
             <Link
               href="/approvals"
-              className="text-[11px] text-blue-600 font-semibold hover:underline mt-1 inline-flex items-center gap-1"
+              className="text-[11px] text-blue-600 font-semibold hover:underline mt-1 inline-flex items-center gap-1 group/link"
             >
-              Open Approval Queue <ArrowRight className="h-3 w-3" />
+              Open Approval Queue <ArrowRight className="h-3 w-3 transition-transform group-hover/link:translate-x-1" />
             </Link>
           </div>
-          <div className="p-2.5 rounded-xl bg-amber-50 text-amber-600 border border-amber-200">
+          <div className="p-3 rounded-xl bg-amber-50 text-amber-600 border border-amber-200 group-hover:scale-110 group-hover:shadow-md transition-all duration-200">
             <Clock className="h-5 w-5" />
           </div>
         </div>
 
         {/* Duplicate & Anomaly Warnings */}
-        <div className="p-5 bg-white rounded-xl border border-slate-200/80 shadow-sm flex items-start justify-between">
+        <div className="p-5 bg-white rounded-2xl border border-slate-200/90 shadow-sm flex items-start justify-between card-interactive group">
           <div>
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Duplicate Warnings</p>
             <p className="text-2xl font-bold text-rose-600 mt-2">{metrics.duplicate_warnings}</p>

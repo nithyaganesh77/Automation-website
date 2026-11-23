@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Bell, LogOut, User as UserIcon, Building, ShieldAlert, Check, Menu } from "lucide-react";
+import { Bell, LogOut, User as UserIcon, Building, ShieldAlert, Check, Menu, UploadCloud, ChevronRight } from "lucide-react";
 import { api } from "@/lib/api-client";
 import { User } from "@/types";
 
@@ -49,31 +50,38 @@ export function Navbar({ sidebarOpen = true, onToggleSidebar }: NavbarProps) {
   };
 
   return (
-    <header className="h-16 bg-white border-b border-slate-200 px-6 sm:px-8 flex items-center justify-between shrink-0 shadow-sm z-20">
+    <header className="h-16 bg-white border-b border-slate-200/90 px-6 sm:px-8 flex items-center justify-between shrink-0 shadow-sm z-20">
       {/* Organization Badge & Menu Toggle */}
       <div className="flex items-center gap-3">
         {!sidebarOpen && onToggleSidebar && (
           <button
             onClick={onToggleSidebar}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-sm transition-all mr-1"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-semibold shadow-md shadow-blue-500/25 hover:shadow-lg hover:shadow-blue-500/35 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 transition-all duration-200 mr-2"
             title="Open Workspace Menu"
           >
-            <Menu className="h-4 w-4 text-blue-600" />
-            <span className="hidden sm:inline">Open Menu</span>
+            <Menu className="h-4 w-4" />
+            <span>Workspace Menu</span>
           </button>
         )}
 
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-700">
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-700 shadow-xs">
           <Building className="h-3.5 w-3.5 text-blue-600" />
           <span>{user?.organization?.name || "DocuMind Enterprise"}</span>
         </div>
-        <span className="text-xs px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 font-semibold border border-blue-200">
+        <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 font-bold border border-blue-200">
           {user?.role || "Admin"}
         </span>
       </div>
 
       {/* Right Controls */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
+        <Link
+          href="/upload"
+          className="hidden sm:flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white text-xs font-semibold shadow-sm hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-95 transition-all duration-200"
+        >
+          <UploadCloud className="h-3.5 w-3.5" />
+          <span>Upload Bill</span>
+        </Link>
         {/* Notifications Dropdown */}
         <div className="relative">
           <button

@@ -213,17 +213,18 @@ export default function UploadPage() {
             <button
               disabled={uploading || !consentAgreed}
               onClick={handleUploadSubmit}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs shadow-md shadow-blue-600/30 transition-all disabled:opacity-50"
+              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs shadow-md shadow-blue-500/25 hover:shadow-lg hover:shadow-blue-500/35 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed group relative overflow-hidden"
             >
+              <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
               {uploading ? (
                 <>
-                  <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-                  Processing Documents...
+                  <RefreshCw className="h-4 w-4 animate-spin" />
+                  <span>Processing & Verifying Tax Math...</span>
                 </>
               ) : (
                 <>
-                  Launch Multi-Agent Intake ({selectedFiles.length})
-                  <ArrowRight className="h-3.5 w-3.5" />
+                  <span>Start Automated Tax Audit ({selectedFiles.length})</span>
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </>
               )}
             </button>
@@ -233,10 +234,10 @@ export default function UploadPage() {
 
       {/* Processed Results Notification */}
       {processedDocs.length > 0 && (
-        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-6 space-y-4">
+        <div className="bg-emerald-50/80 border border-emerald-200 rounded-2xl p-6 space-y-4 shadow-sm animate-fade-in">
           <div className="flex items-center gap-2 text-emerald-800 font-bold text-sm">
             <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-            <span>Multi-Agent Ingestion Complete ({processedDocs.length} Documents)</span>
+            <span>Invoice Ingestion & GST Audit Complete ({processedDocs.length} Bills)</span>
           </div>
 
           <div className="divide-y divide-emerald-100">
