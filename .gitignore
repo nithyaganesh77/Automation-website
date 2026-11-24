@@ -64,3 +64,26 @@ Thumbs.db
 scripts/*.exe
 *.log
 
+# Scratch scripts & temporary procurement files
+*BOM*.pdf
+*Swastik*.pdf
+*Price_Comparison*.pdf
+buyer_procurement_report.html
+price_comparison_report.html
+swastik_purchase_order.html
+swastik_products.json
+tomson_search_results.json
+calc_*.py
+check_*.py
+generate_*.py
+list_*.py
+make_*.py
+match_*.py
+parse_*.py
+prepare_*.py
+search_*.py
+view_*.py
+search.py
+preview.png
+
+
